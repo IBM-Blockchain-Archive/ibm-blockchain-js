@@ -1,6 +1,8 @@
 var fs = require('fs');
+var path = require('path');
 var rest = require(__dirname + "/lib/rest");
 var unzip = require("unzip2");
+var https = require('https');
 
 //PRIVATE!
 var contract = null;
@@ -27,13 +29,13 @@ function obc() {
 		};
 }
 
+var cacheDirectory = path.normalize(__dirname + "/../../.obc-cache")
+
 obc.prototype.load = function(url, dir, cb) {
 	  var keep_looking = true;
-		var temp_dest = __dirname + '/temp';										//	./temp
-		var dest = __dirname + '/temp/file.zip';									//	./temp/file.zip
-		var unzip_dest = temp_dest + '/unzip';										//	./temp/unzip
-		var unzip_cc_dest = unzip_dest + '/' + dir;									//	./temp/unzip/DIRECTORY
-		var https = require('https');
+	  var dest = cacheDirectory + '/file.zip';									
+	  var unzip_dest = cacheDirectory + '/unzip';										//	./temp/unzip
+	  var unzip_cc_dest = unzip_dest + '/' + dir;									//	./temp/unzip/DIRECTORY
 		contract.cc.details.url = url;
 		contract.cc.details.dir = dir;
 		
@@ -172,7 +174,7 @@ obc.prototype.network = function(arrayPeers){
 	}
 	
 obc.prototype.save =  function(cb){
-		var dest = __dirname + '/temp/cc.json';
+		var dest = cacheDirectory + '/cc.json';
 		fs.writeFile(dest, JSON.stringify(contract.cc), function(e){
 
 			if (e != null) {
