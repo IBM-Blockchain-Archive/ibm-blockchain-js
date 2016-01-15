@@ -2,25 +2,25 @@ var fs = require('fs');
 var rest = require(__dirname + "/lib/rest");
 var unzip = require("unzip2");
 
-//Globalish
-var contract = 	{
-		cc: {
-			read: read,
-			write: write,
-			remove: remove,
-			deploy: deploy,
-			readNames: readNames,
-			details:{
-						host: "",
-						port: 80,
-						path: "",
-						url: "",
-						name: {},
-						func: [],
-						vars: []
-			}
-		}
-	};
+////Globalish
+//var contract = 	{
+//		cc: {
+//			read: read,
+//			write: write,
+//			remove: remove,
+//			deploy: deploy,
+//			readNames: readNames,
+//			details:{
+//						host: "",
+//						port: 80,
+//						path: "",
+//						url: "",
+//						name: {},
+//						func: [],
+//						vars: []
+//			}
+//		}
+//	};
 
 module.exports = {
   load: function() {
