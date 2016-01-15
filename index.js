@@ -1,5 +1,5 @@
 var fs = require('fs');
-var rest = require(__dirname + "lib/rest");
+var rest = require("lib/rest");
 var unzip = require("unzip2");
 
 module.exports = {
