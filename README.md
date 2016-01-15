@@ -9,11 +9,13 @@ A set of libraries for easily interacting with Open Block Chain.
 
 ## Usage
 
+```
   var obc = require('obc-js')
   
   console.log(obc.hello());
 
   npm test
+```
 
 ## Release History
 
