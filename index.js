@@ -23,7 +23,7 @@ var contract = 	{
 	};
 
 module.exports = {
-  load: function() {
+  load: function(url, dir, cb) {
 	  var keep_looking = true;
 		var temp_dest = __dirname + '/temp';										//	./temp
 		var dest = __dirname + '/temp/file.zip';									//	./temp/file.zip
