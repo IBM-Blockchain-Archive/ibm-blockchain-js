@@ -2,28 +2,31 @@ var fs = require('fs');
 var rest = require(__dirname + "/lib/rest");
 var unzip = require("unzip2");
 
-//Globalish
-var contract = 	{
-		cc: {
-			read: null,
-			write: null,
-			remove: null,
-			deploy: null,
-			readNames: null,
-			details:{
-						host: "",
-						port: 80,
-						path: "",
-						url: "",
-						name: {},
-						func: [],
-						vars: []
-			}
-		}
-	};
+//PRIVATE!
+var contract = null;
 
-module.exports = {
-  load: function(url, dir, cb) {
+function obc() {
+	  contract = {
+			cc: {
+				read: null,
+				write: null,
+				remove: null,
+				deploy: null,
+				readNames: null,
+				details:{
+							host: "",
+							port: 80,
+							path: "",
+							url: "",
+							name: {},
+							func: [],
+							vars: []
+				}
+			}
+		};
+}
+
+obc.prototype.load = function(url, dir, cb) {
 	  var keep_looking = true;
 		var temp_dest = __dirname + '/temp';										//	./temp
 		var dest = __dirname + '/temp/file.zip';									//	./temp/file.zip
@@ -35,10 +38,11 @@ module.exports = {
 		
 		// Preflight checklist
 		try{fs.mkdirSync(temp_dest);}
-		catch(e){}
+		catch(e){ }
 		fs.access(unzip_cc_dest, cb_file_exists);									//does this shit exist yet?
 		function cb_file_exists(e){
 			if(e != null){
+				console.log()
 				download_it();														//nope
 			}
 			else{
@@ -63,10 +67,17 @@ module.exports = {
 			
 			function cb_downloaded(){
 				console.log('[obc-js] unzipping zip');
-				
 				// Step 1.
 				//fs.createReadStream(dest).pipe(unzip.Extract({ path: 'temp/unzip' }, fs.readdir(unzip_cc_dest, cb_got_names)));function(){ fixURLbar(item); }
-				fs.createReadStream(dest).pipe(unzip.Extract({ path: unzip_dest }, setTimeout(function(){ fs.readdir(unzip_cc_dest, cb_got_names); }, 5000)));	//this sucks, dsh replace
+				fs.createReadStream(dest)
+					.pipe(unzip.Extract(
+							{ path: unzip_dest }, 
+							setTimeout(
+									function(){ 
+										fs.readdir(unzip_cc_dest, cb_got_names); 
+									}, 5000)
+								)
+					);	//this sucks, dsh replace
 			}
 		}
 		
@@ -124,11 +135,9 @@ module.exports = {
 				}
 			}
 		}
-  },
-  hello: function() {
-	  return "Hi!";
-  },
-  network: function(arrayPeers){
+  }
+
+obc.prototype.network = function(arrayPeers){
 		if(arrayPeers.constructor !== Array){
 			console.log('[obc-js] Error - network arg should be array of peer objects');
 		}
@@ -156,4 +165,74 @@ module.exports = {
 			});
 		}
 	}
+	
+obc.prototype.save =  function(cb){
+		var dest = __dirname + '/temp/cc.json';
+		fs.writeFile(dest, JSON.stringify(contract.cc), function(e){
+
+			if (e != null) {
+				console.log(e);
+				if(cb) cb(eFmt('fs write error', 500, e), null);
+			}
+			else {
+				console.log('\t- saved ', dest);
+				if(cb) cb(null, null);
+			}
+		});
+	}
+
+	
+module.exports = obc
+
+//============================================================================================================================
+//Helper Functions() 
+//============================================================================================================================
+
+//==================================================================
+//populate_contract() - create JS call for custom goLang function, store in contract!
+//==================================================================
+function populate_go_contract(name){
+	if(contract[name] != null){
+		console.log('[obc-js] \t skip, already exists');
+	}
+	else {
+		contract.cc.details.func.push(name);
+		contract[name] = function(args, cb){				//create the functions in contract obj
+			var options = {path: '/devops/invoke'};
+			var body = {
+					chaincodeSpec: {
+						type: "GOLANG",
+						chaincodeID: {
+							name: contract.cc.details.name,
+						},
+						ctorMsg: {
+							function: name,
+							args: args
+						}
+					}
+			};
+
+			options.success = function(statusCode, data){
+				console.log("[obc-js]", name, " - success:", data);
+				if(cb) cb(null, data);
+			};
+			options.failure = function(statusCode, e){
+				console.log("[obc-js]", name, " - failure:", statusCode);
+				if(cb) cb(eFmt('http error', statusCode, e), null);
+			};
+			rest.post(options, '', body);
+		};
+	}
+}
+
+
+//==================================================================
+//eFmt() - format errors
+//==================================================================
+function eFmt(name, code, details){
+	return 	{
+		name: String(name),
+		code: Number(code),
+		details: details
+	};
 }
