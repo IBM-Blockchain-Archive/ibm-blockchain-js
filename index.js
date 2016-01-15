@@ -26,7 +26,7 @@ module.exports = {
   hello: function() {
 	  return "Hi!";
   },
-  network = function(arrayPeers){
+  network: function(arrayPeers){
 		if(arrayPeers.constructor !== Array){
 			console.log('[obc-js] Error - network arg should be array of peer objects');
 		}
