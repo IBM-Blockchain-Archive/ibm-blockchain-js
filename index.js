@@ -20,7 +20,7 @@ var contract = 	{
 						vars: []
 			}
 		}
-//	};
+	};
 
 module.exports = {
   load: function() {
