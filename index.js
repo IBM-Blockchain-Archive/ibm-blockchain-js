@@ -40,7 +40,7 @@ obc.prototype.load = function(url, dir, cb) {
 		contract.cc.details.dir = dir;
 		
 		// Preflight checklist
-		try{fs.mkdirSync(temp_dest);}
+		try{fs.mkdirSync(cacheDirectory);}
 		catch(e){ }
 		fs.access(unzip_cc_dest, cb_file_exists);									//does this shit exist yet?
 		function cb_file_exists(e){
