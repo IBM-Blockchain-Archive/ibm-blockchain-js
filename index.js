@@ -5,6 +5,7 @@ var unzip = require("unzip2");
 //PRIVATE!
 var contract = null;
 
+
 function obc() {
 	  contract = {
 			cc: {
@@ -129,7 +130,11 @@ obc.prototype.load = function(url, dir, cb) {
 						}
 						
 						// Step 3.
-						module.exports.save();
+						obc.prototype.save();
+						contract.cc.read = read
+						contract.cc.write = write
+						contract.cc.remove = remove
+						contract.cc.deploy = deploy
 						if(cb) cb(null, contract);
 					}
 				}
@@ -185,6 +190,164 @@ obc.prototype.save =  function(cb){
 module.exports = obc
 
 //============================================================================================================================
+//read() - read generic variable from chaincode state
+//============================================================================================================================
+function read(name, cb, lvl){						//lvl is for reading past state blocks, tbd exactly
+	var options = {
+		path: '/devops/query'
+	};
+	var body = {
+					chaincodeSpec: {
+						type: "GOLANG",
+						chaincodeID: {
+							name: contract.cc.details.name,
+						},
+						ctorMsg: {
+							function: "query",
+							args: [name]
+						}
+					}
+				};
+				
+	options.success = function(statusCode, data){
+		console.log("[obc-js] Read - success:", data);
+		if(cb) cb(null, data.OK);
+	};
+	options.failure = function(statusCode, e){
+		console.log("[obc-js] Read - failure:", statusCode);
+		if(cb) cb(eFmt('http error', statusCode, e), null);
+	};
+		rest.post(options, '', body);
+	
+}
+
+//============================================================================================================================
+//write() - write generic variable to chaincode state
+//============================================================================================================================
+function write(name, val, cb){
+	var options = {
+		path: '/devops/invoke'
+	};
+	var body = {
+					chaincodeSpec: {
+						type: "GOLANG",
+						chaincodeID: {
+							name: contract.cc.details.name,
+						},
+						ctorMsg: {
+							function: 'write',
+							args: [name, val]
+						}
+					}
+				};
+	
+	options.success = function(statusCode, data){
+		console.log("[obc-js] Write - success:", data);
+		if(cb) cb(null, data);
+	};
+	options.failure = function(statusCode, e){
+		console.log("[obc-js] Write - failure:", statusCode);
+		if(cb) cb(eFmt('http error', statusCode, e), null);
+	};
+	rest.post(options, '', body);
+}
+
+//============================================================================================================================
+//remove() - delete a generic variable from chaincode state
+//============================================================================================================================
+function remove(name, cb){
+	var options = {
+		path: '/devops/invoke'
+	};
+	var body = {
+					chaincodeSpec: {
+						type: "GOLANG",
+						chaincodeID: {
+							name: contract.cc.details.name,
+						},
+						ctorMsg: {
+							function: 'delete',
+							args: [name]
+						}
+					}
+				};
+
+	options.success = function(statusCode, data){
+		console.log("[obc-js] Remove - success:", data);
+		if(cb) cb(null, data);
+	};
+	options.failure = function(statusCode, e){
+		console.log("[obc-js] Remove - failure:", statusCode);
+		if(cb) cb(eFmt('http error', statusCode, e), null);
+	};
+	rest.post(options, '', body);
+}
+
+//============================================================================================================================
+//deply() - deploy chaincode, optional function to run
+//============================================================================================================================
+function deploy(func, args, cb){
+	var options = {path: '/devops/deploy'};
+	var body = 	{
+					type: "GOLANG",
+					chaincodeID: {
+							path: contract.cc.details.path
+						}
+				};
+	
+	if(func) {																//if function given, run it
+		body.ctorMsg = 	{
+							"function": func,
+							"args": args
+						};
+	}
+	options.success = function(statusCode, data){
+		console.log("[obc-js] deploy - success:", data);
+		contract.cc.details.name = data.message;
+		if(cb){
+			setTimeout( cb(null, data), 5000);								//wait extra long, not always ready yet
+		}
+	};
+	options.failure = function(statusCode, e){
+		console.log("[obc-js] deploy - failure:", statusCode);
+		if(cb) cb(eFmt('http error', statusCode, e), null);
+	};
+	rest.post(options, '', body);
+}
+
+//============================================================================================================================
+//readNames() - read all variable names in chaincode state
+//============================================================================================================================
+function readNames(cb, lvl){						//lvl is for reading past state blocks, tbd exactly
+	var options = {
+		path: '/devops/invoke'
+	};
+	var body = {
+					chaincodeSpec: {
+						type: "GOLANG",
+						chaincodeID: {
+							name: contract.cc.details.name,
+						},
+						ctorMsg: {
+							function: "readnames",
+							args: []
+						}
+					}
+				};
+
+	options.success = function(statusCode, data){
+		console.log("[obc-js] ReadNames - success:", data);
+		if(cb) cb(null, data.OK);
+	};
+	options.failure = function(statusCode, e){
+		console.log("[obc-js] ReadNames - failure:", statusCode);
+		if(cb) cb(eFmt('http error', statusCode, e), null);
+	};
+		rest.post(options, '', body);
+	
+}
+
+//============================================================================================================================
 //Helper Functions() 
 //============================================================================================================================
 
@@ -236,3 +399,4 @@ function eFmt(name, code, details){
 		details: details
 	};
 }
+
