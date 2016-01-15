@@ -18,6 +18,9 @@
     "node",
     "transaction"
   ],
+  "dependencies": {
+  	"unzip2": "*"
+  }
   "author": "David Huffman and Ben Smith",
   "license": "ISC"
 }
