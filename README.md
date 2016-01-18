@@ -3,7 +3,7 @@ obc.js
 
 A set of libraries for easily interacting with Open Block Chain.
 
-*Version*: 0.0.1
+*Version*: 0.0.2
 *Updated*: 01/15/2016
 
 ## Installation

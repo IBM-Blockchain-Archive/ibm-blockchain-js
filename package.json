@@ -1,6 +1,6 @@
 {
   "name": "obc-js",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A set of libraries for easily interacting with Open Block Chain.",
   "main": "index.js",
   "scripts": {
