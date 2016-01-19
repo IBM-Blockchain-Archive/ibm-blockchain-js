@@ -8,17 +8,16 @@ A set of libraries for easily interacting with Open Block Chain.
 
 ## Installation
 
-  npm install obc-js --save
-
+```
+npm install obc-js --save
+```
 
 ## Usage
 
 ```
-  var obc = require('obc-js')
+var obc = require('obc-js')
   
-  console.log(obc.hello());
-
-  npm test
+//add usage stuff
 ```
 
 
@@ -61,3 +60,4 @@ A set of libraries for easily interacting with Open Block Chain.
 ## Release History
 
 * 0.0.1 Internal Dev Version
+* 0.0.2 Switched to using Nodegit
