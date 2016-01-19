@@ -19,8 +19,8 @@
     "transaction"
   ],
   "dependencies": {
-  	"nodegit": "*",
-  	"promisify-node": "*"
+  	"download": "*",
+  	"walker": "*"
   },
   "author": "David Huffman and Ben Smith",
   "license": "IPL-1.0"

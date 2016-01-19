@@ -1,9 +1,9 @@
 var fs = require('fs');
-var nodegit = require("nodegit")
 var path = require('path');
 var rest = require(__dirname + "/lib/rest");
 var https = require('https');
-var promisify = require("promisify-node");
+var download = require('download')
+var walker = require('walker')
 
 //PRIVATE!
 var contract = null;
@@ -43,48 +43,36 @@ obc.prototype.load = function(url, subdir, callback)
 	{
 		if (e.code == "ENOENT")
 		{
-			console.log("[obc-js] Directory does not exist, cloning repository...")
-			nodegit.Clone.clone(url, localDir, {
-				fetchOpts: {
-					callbacks: {
-			            certificateCheck: function() {
-			              return 1;
-			            }
-			          }
-			        }
-			      })
-			  .then(function(repo) {
-				  lookForGo(localDir, repo, subdir, callback)
-			  })
-			  .catch(function(reasonForFailure) {
-				  console.log("[obc-js] An error occurred while cloning the repo: " + reasonForFailure)
-			  })
+			console.log("[obc-js] Directory does not exist, downloading the repository...")
+			var d = new download({mode:'755', extract: true})
+			d.get(url)
+			d.dest(localDir)
+			d.run(function (err, files) {
+				if (err)
+				{
+					console.log("Error occurred downloading file: " + err)
+				}
+				else
+				{
+					lookForGo(localDir, subdir, callback)
+				}
+			})
 		}
 		else if (e.code == "EEXIST")
 		{
 			console.log("[obc-js] Directory exists, opening existing repository...")
-			nodegit.Repository.open(localDir).then(function (repo) {
-				lookForGo(localDir, repo, subdir, callback)
-			})
-			.catch(function (reasonForFailure) {
-				console.log("An error occurred while opening the repo: " + reasonForFailure)
-			});
+			lookForGo(localDir, subdir, callback)
 		}
 	}
 }
 
-function lookForGo(basePath, repository, subdir, callback) {
+function lookForGo(basePath, subdir, callback) {
 	console.log("[obc-js] Looking for Golang files in repository at " + basePath + ", within subdirectory: " + subdir)
-	repository.getMasterCommit().then(function(firstCommitOnMaster) {
-		return firstCommitOnMaster.getTree()
-	})
-	.then(function (tree) {
-		var walker = tree.walk();
-	    walker.on("entry", function(entry) {
-	      if (entry.path().indexOf(subdir + "/") != -1 && entry.path().indexOf(".go") != -1)
-	      {
-	    	  console.log("[obc-js] Scanning file: " + entry.path())
-	    	  fs.readFile(basePath + "/" + entry.path(), 'utf8', function (err, str) {
+	var walkme = new walker(basePath).on('file', function(file, stat) {
+	      if (file.indexOf(subdir + "/") != -1 && file.indexOf(".go") != -1)
+	      { 
+	    	  console.log("[obc-js] Scanning file: " + file)
+	    	  fs.readFile(file, 'utf8', function (err, str) {
 	    			if (err)
 	    			{
 	    				console.log("Error while reading file: " + err)
@@ -127,16 +115,8 @@ function lookForGo(basePath, repository, subdir, callback) {
 	    			} //else file read successfully
 	    		}) //end fs.readfile
 	      	} //found go file in relevant subdir
-	    }); //on entry
+	})
 
-	    // Don't forget to call `start()`!
-	    walker.start();
-	})
-	.catch(function (reasonForFailure) {
-		console.log("An error occurred while opening the repo: " + reasonForFailure)
-		return;
-	})
-	.done()
 }
 
 obc.prototype.network = function(arrayPeers){
