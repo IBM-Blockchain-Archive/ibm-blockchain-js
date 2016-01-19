@@ -3,8 +3,8 @@ obc.js
 
 A set of libraries for easily interacting with Open Block Chain.
 
-*Version*: 0.0.2
-*Updated*: 01/15/2016
+*Version*: 0.0.3
+*Updated*: 01/19/2016
 
 ## Installation
 
@@ -61,3 +61,4 @@ var obc = require('obc-js')
 
 * 0.0.1 Internal Dev Version
 * 0.0.2 Switched to using Nodegit
+* 0.0.3 Moved back to unzip and download cause of Nodegit dependencies.
