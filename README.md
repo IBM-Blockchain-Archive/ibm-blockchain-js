@@ -43,7 +43,7 @@ npm install ibm-blockchain-js
 	var chaincode = {};
 
 	// ==================================
-	// configure obc-js sdk
+	// configure ibc-js sdk
 	// ==================================
 	var options = 	{
 		network:{
@@ -66,12 +66,12 @@ npm install ibm-blockchain-js
 	};
 	
 	// Step 2 ==================================
-	obc.load(options, cb_ready);
+	ibc.load(options, cb_ready);
 
 	// Step 3 ==================================
 	function cb_ready(err, cc){								//response has chaincode functions
-		app1.setup(obc, cc);
-		app2.setup(obc, cc);
+		app1.setup(ibc, cc);
+		app2.setup(ibc, cc);
 	
 	// Step 4 ==================================
 		if(cc.details.deployed_name === ""){				//decide if i need to deploy or not
@@ -93,13 +93,13 @@ npm install ibm-blockchain-js
 ***
 ***
 
-## <a name="obcjs"></a>OBC-JS Documentation
-### obc.load(options, [callback])
+## <a name="ibcjs"></a>IBM-Blockchain-JS Documentation
+### ibc.load(options, [callback])
 This is a wrapper function that will run a typical startup setup. It will run in order:
 
-1. obc.network()
-2. obc.register() for each peer (only runs if options.network.users is != null)
-3. obc.load_chaincode()
+1. ibc.network()
+2. ibc.register() for each peer (only runs if options.network.users is != null)
+3. ibc.load_chaincode()
 4. cb()
 
 Options Parameter:
@@ -128,7 +128,7 @@ Options Parameter:
 	};
 ```
 
-### obc.load_chaincode(options, [callback])
+### ibc.load_chaincode(options, [callback])
 Load the chaincode you want to use. 
 It will be downloaded and parsed. 
 The callback will receive (e, obj) where e is the error format and obj is the chaincode object.
@@ -143,10 +143,10 @@ Example
 		
 		deployed_name: null   //[optional] this is the hashed name of a deployed chaincode.  if you want to run with chaincode that is already deployed set it now, else it will be set when you deploy with the sdk
 	};
-	obc.load_chaincode(options, cb_ready);
+	ibc.load_chaincode(options, cb_ready);
 ```
 
-### obc.network(arrayPeers)
+### ibc.network(arrayPeers)
 Set the information about the peers in the network.
 This should be an array of peer objects.  
 Example:
@@ -160,18 +160,18 @@ Example:
 			"api_url": "http://xxx.xxx.xxx.xxx:xxxxx"
 		}
 	]
-	obc.network(peers);
+	ibc.network(peers);
 ```
 
-### obc.save(path [callback])
+### ibc.save(path [callback])
 Save the [Chaincode Summary File](#ccsf) to a path.
 
 
-### obc.clear([callback])
+### ibc.clear([callback])
 Clear any loaded chaincode files including the downloaded chaincode repo, and [Chaincode Summary File](#ccsf).
 
 
-### obc.chain_stats([callback])
+### ibc.chain_stats([callback])
 Get statistics on the network's chain.  
 Example Response:
 
@@ -183,7 +183,7 @@ Example Response:
 	}
 ```
 
-### obc.block_stats(id, [callback])
+### ibc.block_stats(id, [callback])
 Get statistics on a particular block in the chain.  
 Example Response:
 
@@ -212,22 +212,22 @@ Example Response:
 	}
 ```
 
-### obc.switchPeer(peerIndex)
+### ibc.switchPeer(peerIndex)
 The SDK will default to use peer[0].  This function will switch the default peer to another index.  
 Example:
 	
 ```js
-	obc.switchPeer(2);
+	ibc.switchPeer(2);
 ```
 	
-### obc.register(peerIndex, enrollID, enrollsecret, [callback])
+### ibc.register(peerIndex, enrollID, enrollsecret, [callback])
 Only applicable oo a network with security enabled. 
 register() will register against peer[peerIndex] with the provided credentials.
 If successful the peer will now use this enrollID to perform any http requests.
 Example:
 	
 ```js
-	obc.register(3, 'user1', 'xxxxxx', my_cb);
+	ibc.register(3, 'user1', 'xxxxxx', my_cb);
 ```
 
 ***
@@ -299,8 +299,8 @@ Will invoke your Go function CUSTOM_FUNCTION_NAME and pass it 'arg'.  **Note the
 	
 ### <a name="ccsf"></a>Chaincode Summary File
 This file is used internally. 
-It is created in obc.load_chaincode() and updated with chaincode.deploy().
-A copy can be saved elsewhere with obc.save(path)
+It is created in ibc.load_chaincode() and updated with chaincode.deploy().
+A copy can be saved elsewhere with ibc.save(path)
 
 ```js
 	{

@@ -37,11 +37,11 @@ var chaincode = {
 					}
 				};
 
-function obc() {}
-obc.selectedPeer = 0;
-obc.q = [];
-obc.lastPoll = 0;
-obc.lastBlock = 0;
+function ibc() {}
+ibc.selectedPeer = 0;
+ibc.q = [];
+ibc.lastPoll = 0;
+ibc.lastBlock = 0;
 var tempDirectory = path.join(__dirname, "./temp");									//	=./temp - temp directory name
 
 
@@ -51,7 +51,7 @@ var tempDirectory = path.join(__dirname, "./temp");									//	=./temp - temp di
 // 2. register users with security (if present)
 // 3. load chaincode and parse
 // ============================================================================================================================
-obc.prototype.load = function(options, cb){
+ibc.prototype.load = function(options, cb){
 	var errors = [];
 	if(!options.network || !options.network.peers) errors.push("the option 'network.peers' is required");
 
@@ -59,13 +59,13 @@ obc.prototype.load = function(options, cb){
 	if(!options.chaincode || !options.chaincode.unzip_dir) errors.push("the option 'chaincode.unzip_dir' is required");
 	if(!options.chaincode || !options.chaincode.git_url) errors.push("the option 'chaincode.git_url' is required");
 	if(errors.length > 0){															//check for input errors
-		console.log('! [obc-js] Input Error - obc.load()', errors);
+		console.log('! [ibc-js] Input Error - obc.load()', errors);
 		if(cb) cb(eFmt('input error', 400, errors));
 		return;																		//get out of dodge
 	}
 	
 	// Step 1
-	obc.prototype.network(options.network.peers);
+	ibc.prototype.network(options.network.peers);
 	
 	// Step 2 - optional - only for secure networks
 	if(options.network.users){
@@ -77,7 +77,7 @@ obc.prototype.load = function(options, cb){
 		}
 		async.each(arr, function(i, a_cb) {
 			if(options.network.users[i]){											//make sure we still have a user for this network
-				obc.prototype.register(i, options.network.users[i].username, options.network.users[i].secret, a_cb);
+				ibc.prototype.register(i, options.network.users[i].username, options.network.users[i].secret, a_cb);
 			}
 			else a_cb();
 		}, function(err, data){
@@ -90,7 +90,7 @@ obc.prototype.load = function(options, cb){
 	
 	// Step 3
 	function load_cc(){
-		obc.prototype.load_chaincode(options.chaincode, cb);						//download/parse and load chaincode
+		ibc.prototype.load_chaincode(options.chaincode, cb);						//download/parse and load chaincode
 	}
 };
 
@@ -104,13 +104,13 @@ obc.prototype.load = function(options, cb){
 //		2c. Create JS function for golang function
 // 3. Call callback()
 // ============================================================================================================================
-obc.prototype.load_chaincode = function(options, cb) {
+ibc.prototype.load_chaincode = function(options, cb) {
 	var errors = [];
 	if(!options.zip_url) errors.push("the option 'zip_url' is required");
 	if(!options.unzip_dir) errors.push("the option 'unzip_dir' is required");
 	if(!options.git_url) errors.push("the option 'git_url' is required");
 	if(errors.length > 0){																//check for input errors
-		console.log('! [obc-js] Input Error - obc.load_chaincode()', errors);
+		console.log('! [ibc-js] Input Error - obc.load_chaincode()', errors);
 		if(cb) cb(eFmt('input error', 400, errors));
 		return;																			//get out of dodge
 	}
@@ -124,7 +124,7 @@ obc.prototype.load_chaincode = function(options, cb) {
 	chaincode.details.git_url = options.git_url;
 
 	if(!options.deployed_name || options.deployed_name == ''){							//lets clear and re-download
-		obc.prototype.clear(cb_ready);
+		ibc.prototype.clear(cb_ready);
 	}
 	else{
 		chaincode.details.deployed_name = options.deployed_name;
