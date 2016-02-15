@@ -1,7 +1,7 @@
 {
   "name": "ibm-blockchain-js",
-  "version": "0.0.3",
-  "description": "A set of libraries for easily interacting with IBM's Blockchain.",
+  "version": "0.0.1",
+  "description": "A set of libraries for easily interacting with IBM Blockchain.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -19,9 +19,11 @@
     "transaction"
   ],
   "dependencies": {
-  	"download": "*",
-  	"walker": "*"
+    "decompress": "3.0.0",
+	"async": "1.5.2"
   },
-  "author": "David Huffman and Ben Smith",
+  "author": {
+    "name": "David Huffman and Ben Smith"
+  },
   "license": "IPL-1.0"
 }
