@@ -59,7 +59,7 @@ ibc.prototype.load = function(options, cb){
 	if(!options.chaincode || !options.chaincode.unzip_dir) errors.push("the option 'chaincode.unzip_dir' is required");
 	if(!options.chaincode || !options.chaincode.git_url) errors.push("the option 'chaincode.git_url' is required");
 	if(errors.length > 0){															//check for input errors
-		console.log('! [ibc-js] Input Error - obc.load()', errors);
+		console.log('! [ibc-js] Input Error - ibc.load()', errors);
 		if(cb) cb(eFmt('input error', 400, errors));
 		return;																		//get out of dodge
 	}
@@ -110,7 +110,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 	if(!options.unzip_dir) errors.push("the option 'unzip_dir' is required");
 	if(!options.git_url) errors.push("the option 'git_url' is required");
 	if(errors.length > 0){																//check for input errors
-		console.log('! [ibc-js] Input Error - obc.load_chaincode()', errors);
+		console.log('! [ibc-js] Input Error - ibc.load_chaincode()', errors);
 		if(cb) cb(eFmt('input error', 400, errors));
 		return;																			//get out of dodge
 	}
@@ -141,7 +141,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 				download_it(options.zip_url);											//nope, go download it
 			}
 			else{
-				console.log('[obc-js] Found chaincode in local file system');
+				console.log('[ibc-js] Found chaincode in local file system');
 				fs.readdir(unzip_cc_dest, cb_got_names);								//yeppers, go use it
 			}
 		}
@@ -149,7 +149,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 
 	// Step 0.
 	function download_it(download_url){
-		console.log('[obc-js] Downloading zip');
+		console.log('[ibc-js] Downloading zip');
 		var file = fs.createWriteStream(zip_dest);
 		https.get(download_url, function(response) {
 			response.pipe(file);
@@ -164,7 +164,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 				}
 			});
 		}).on('error', function(err) {
-			console.log('! [obc-js] Download error');
+			console.log('! [ibc-js] Download error');
 			fs.unlink(zip_dest); 													//delete the file async
 			if (cb) cb(eFmt('fs error', 500, err.message), chaincode);
 		});
@@ -172,19 +172,19 @@ ibc.prototype.load_chaincode = function(options, cb) {
 	
 	// Step 1.
 	function cb_downloaded(){
-		console.log('[obc-js] Unzipping zip');
+		console.log('[ibc-js] Unzipping zip');
 		var zip = new AdmZip(zip_dest);
 		zip.extractAllTo(unzip_dest, /*overwrite*/true);
-		console.log('[obc-js] Unzip done');
+		console.log('[ibc-js] Unzip done');
 		fs.readdir(unzip_cc_dest, cb_got_names);
 		fs.unlink(zip_dest, function(err) {});										//remove zip file, never used again
 	}
 
 	// Step 2.
 	function cb_got_names(err, obj){
-		console.log('[obc-js] Scanning files', obj);
+		console.log('[ibc-js] Scanning files', obj);
 		var foundGo = false;
-		if(err != null) console.log('! [obc-js] fs readdir Error', err);
+		if(err != null) console.log('! [ibc-js] fs readdir Error', err);
 		else{
 			for(var i in obj){
 				if(obj[i].indexOf('.go') >= 0){										//look for GoLang files
@@ -197,13 +197,13 @@ ibc.prototype.load_chaincode = function(options, cb) {
 		}
 		if(!foundGo){																//error
 			var msg = 'did not find any *.go files, cannot continue';
-			console.log('! [obc-js] Error - ', msg);
+			console.log('! [ibc-js] Error - ', msg);
 			if(cb) cb(eFmt('no chaincode', 400, msg), null);
 		}
 	}
 	
 	function cb_read_go_file(err, str){
-		if(err != null) console.log('! [obc-js] fs readfile Error', err);
+		if(err != null) console.log('! [ibc-js] fs readfile Error', err);
 		else{
 			
 			// Step 2a.
@@ -211,7 +211,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 			var res = str.match(regex);
 			if(!res || !res[1]){
 				var msg = 'did not find Run() function in chaincode, cannot continue';
-				console.log('! [obc-js] Error -', msg);
+				console.log('! [ibc-js] Error -', msg);
 				if(cb) cb(eFmt('missing run', 400, msg), null);
 			}
 			else{
@@ -221,7 +221,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 				var re = new RegExp('\\s' + res[1] + '\\.(\\w+)\\(', "gi");			//find the function names in Run()
 				res = str.match(re);
 				if(res[1] == null){
-					console.log('[obc-js] error did not find function names in chaincode');
+					console.log('[ibc-js] error did not find function names in chaincode');
 				}
 				else{
 					
@@ -247,12 +247,12 @@ ibc.prototype.load_chaincode = function(options, cb) {
 // ============================================================================================================================
 // EXTERNAL - network() - setup network configuration to hit a rest peer
 // ============================================================================================================================
-obc.prototype.network = function(arrayPeers){
+ibc.prototype.network = function(arrayPeers){
 	var errors = [];
 	if(!arrayPeers) errors.push("network input arg should be array of peer objects");
 	else if(arrayPeers.constructor !== Array) errors.push("network input arg should be array of peer objects");
 	if(errors.length > 0){															//check for input errors
-		console.log('! [obc-js] Input Error - obc.network()', errors);
+		console.log('! [ibc-js] Input Error - ibc.network()', errors);
 	}
 	else{
 		for(var i in arrayPeers){
@@ -266,7 +266,7 @@ obc.prototype.network = function(arrayPeers){
 						};
 			temp.name = arrayPeers[i].id.substring(pos) + '-' + arrayPeers[i].api_host + ':' + arrayPeers[i].api_port;	//build friendly name
 			if(arrayPeers[i].api_url.indexOf('https') == -1) temp.ssl = false;
-			console.log('[obc-js] Peer: ', temp.name);
+			console.log('[ibc-js] Peer: ', temp.name);
 			chaincode.details.peers.push(temp);
 		}
 
@@ -288,7 +288,7 @@ obc.prototype.network = function(arrayPeers){
 // ============================================================================================================================
 // EXTERNAL - switchPeer() - switch the default peer to hit
 // ============================================================================================================================
-obc.prototype.switchPeer = function(index) {
+ibc.prototype.switchPeer = function(index) {
 	if(chaincode.details.peers[index]) {
 		rest.init({																	//load default values for rest call to peer
 					host: chaincode.details.peers[index].api_host,
@@ -301,7 +301,7 @@ obc.prototype.switchPeer = function(index) {
 					timeout: 60000,
 					quiet: true
 		});
-		obc.selectedPeer = index;
+		ibc.selectedPeer = index;
 		return true;
 	} else {
 		return false;
@@ -311,11 +311,11 @@ obc.prototype.switchPeer = function(index) {
 // ============================================================================================================================
 // EXTERNAL - save() - write chaincode details to a json file
 // ============================================================================================================================
-obc.prototype.save =  function(dir, cb){
+ibc.prototype.save =  function(dir, cb){
 	var errors = [];
 	if(!dir) errors.push("the option 'dir' is required");
 	if(errors.length > 0){																//check for input errors
-		console.log('[obc-js] Input Error - obc.save()', errors);
+		console.log('[ibc-js] Input Error - ibc.save()', errors);
 		if(cb) cb(eFmt('input error', 400, errors));
 	}
 	else{
@@ -338,8 +338,8 @@ obc.prototype.save =  function(dir, cb){
 // ============================================================================================================================
 // EXTERNAL - clear() - clear the temp directory
 // ============================================================================================================================
-obc.prototype.clear =  function(cb){
-	console.log('[obc-js] removing temp dir');
+ibc.prototype.clear =  function(cb){
+	console.log('[ibc-js] removing temp dir');
 	removeThing(tempDirectory, cb);
 };
 
@@ -391,15 +391,15 @@ function removeThing(dir, cb){
 //============================================================================================================================
 // EXTERNAL chain_stats() - get blockchain stats
 //============================================================================================================================
-obc.prototype.chain_stats =  function(cb){
+ibc.prototype.chain_stats =  function(cb){
 	var options = {path: '/chain'};
 
 	options.success = function(statusCode, data){
-		console.log("[obc-js] Chain Stats - success");
+		console.log("[ibc-js] Chain Stats - success");
 		if(cb) cb(null, data);
 	};
 	options.failure = function(statusCode, e){
-		console.log("[obc-js] Chain Stats - failure:", statusCode);
+		console.log("[ibc-js] Chain Stats - failure:", statusCode);
 		if(cb) cb(eFmt('http error', statusCode, e), null);
 	};
 	rest.get(options, '');
@@ -408,14 +408,14 @@ obc.prototype.chain_stats =  function(cb){
 //============================================================================================================================
 // EXTERNAL block_stats() - get block meta data
 //============================================================================================================================
-obc.prototype.block_stats =  function(id, cb){
+ibc.prototype.block_stats =  function(id, cb){
 	var options = {path: '/chain/blocks/' + id};					//i think block IDs start at 0, height starts at 1, fyi
 	options.success = function(statusCode, data){
-		console.log("[obc-js] Block Stats - success");
+		console.log("[ibc-js] Block Stats - success");
 		if(cb) cb(null, data);
 	};
 	options.failure = function(statusCode, e){
-		console.log("[obc-js] Block Stats - failure:", statusCode);
+		console.log("[ibc-js] Block Stats - failure:", statusCode);
 		if(cb) cb(eFmt('http error', statusCode, e), null);
 	};
 	rest.get(options, '');
@@ -439,16 +439,16 @@ function read(name, cb, lvl){										//lvl is for reading past state blocks, t
 							function: "query",
 							args: [name]
 						},
-						secureContext: chaincode.details.peers[obc.selectedPeer].user
+						secureContext: chaincode.details.peers[ibc.selectedPeer].user
 					}
 				};
 	//console.log('body', body);
 	options.success = function(statusCode, data){
-		console.log("[obc-js] Read - success:", data);
+		console.log("[ibc-js] Read - success:", data);
 		if(cb) cb(null, data.OK);
 	};
 	options.failure = function(statusCode, e){
-		console.log("[obc-js] Read - failure:", statusCode);
+		console.log("[ibc-js] Read - failure:", statusCode);
 		if(cb) cb(eFmt('http error', statusCode, e), null);
 	};
 	rest.post(options, '', body);
@@ -471,17 +471,17 @@ function write(name, val, cb){
 							function: 'write',
 							args: [name, val]
 						},
-						secureContext: chaincode.details.peers[obc.selectedPeer].user
+						secureContext: chaincode.details.peers[ibc.selectedPeer].user
 					}
 				};
 	
 	options.success = function(statusCode, data){
-		console.log("[obc-js] Write - success:", data);
-		obc.q.push(Date.now());
+		console.log("[ibc-js] Write - success:", data);
+		ibc.q.push(Date.now());
 		if(cb) cb(null, data);
 	};
 	options.failure = function(statusCode, e){
-		console.log("[obc-js] Write - failure:", statusCode);
+		console.log("[ibc-js] Write - failure:", statusCode);
 		if(cb) cb(eFmt('http error', statusCode, e), null);
 	};
 	rest.post(options, '', body);
@@ -504,17 +504,17 @@ function remove(name, cb){
 							function: 'delete',
 							args: [name]
 						},
-						secureContext: chaincode.details.peers[obc.selectedPeer].user
+						secureContext: chaincode.details.peers[ibc.selectedPeer].user
 					}
 				};
 
 	options.success = function(statusCode, data){
-		console.log("[obc-js] Remove - success:", data);
-		obc.q.push(Date.now());
+		console.log("[ibc-js] Remove - success:", data);
+		ibc.q.push(Date.now());
 		if(cb) cb(null, data);
 	};
 	options.failure = function(statusCode, e){
-		console.log("[obc-js] Remove - failure:", statusCode);
+		console.log("[ibc-js] Remove - failure:", statusCode);
 		if(cb) cb(eFmt('http error', statusCode, e), null);
 	};
 	rest.post(options, '', body);
@@ -523,8 +523,8 @@ function remove(name, cb){
 //============================================================================================================================
 //register() - register a username with a peer (only for a secured blockchain network)
 //============================================================================================================================
-obc.prototype.register = function(index, enrollID, enrollSecret, cb) {
-	console.log("[obc-js] Registering ", chaincode.details.peers[index].name, " w/enrollID - " + enrollID);
+ibc.prototype.register = function(index, enrollID, enrollSecret, cb) {
+	console.log("[ibc-js] Registering ", chaincode.details.peers[index].name, " w/enrollID - " + enrollID);
 	var options = {
 		path: '/registrar',
 		host: chaincode.details.peers[index].api_host,
@@ -538,14 +538,14 @@ obc.prototype.register = function(index, enrollID, enrollSecret, cb) {
 				};
 
 	options.success = function(statusCode, data){
-		console.log("[obc-js] Registration success:", enrollID);
+		console.log("[ibc-js] Registration success:", enrollID);
 		chaincode.details.peers[index].user = enrollID;							//remember the user for this peer
 		if(cb){
 			cb(null, data);
 		}
 	};
 	options.failure = function(statusCode, e){
-		console.log("[obc-js] Register - failure:", enrollID, statusCode);
+		console.log("[ibc-js] Register - failure:", enrollID, statusCode);
 		if(cb) cb(eFmt('http error', statusCode, e), null);
 	};
 	rest.post(options, '', body);
@@ -555,7 +555,7 @@ obc.prototype.register = function(index, enrollID, enrollSecret, cb) {
 //deploy() - deploy chaincode and call a cc function
 //============================================================================================================================
 function deploy(func, args, save_path, cb){
-	console.log("[obc-js] Deploying Chaincode - Start");
+	console.log("[ibc-js] Deploying Chaincode - Start");
 	console.log("\n\n\t Waiting...");										//this can take awhile
 	var options = {path: '/devops/deploy'};
 	var body = 	{
@@ -567,23 +567,23 @@ function deploy(func, args, save_path, cb){
 							"function": func,
 							"args": args
 					},
-					secureContext: chaincode.details.peers[obc.selectedPeer].user
+					secureContext: chaincode.details.peers[ibc.selectedPeer].user
 				};
 	//console.log('!body', body);
 	options.success = function(statusCode, data){
 		console.log("\n\n\t deploy success [wait 1 more minute]");
 		chaincode.details.deployed_name = data.message;
-		obc.prototype.save(tempDirectory);									//save it so we remember we have deployed
-		if(save_path != null) obc.prototype.save(save_path);				//user wants the updated file somewhere
+		ibc.prototype.save(tempDirectory);									//save it so we remember we have deployed
+		if(save_path != null) ibc.prototype.save(save_path);				//user wants the updated file somewhere
 		if(cb){
 			setTimeout(function(){
-				console.log("[obc-js] Deploying Chaincode - Complete");
+				console.log("[ibc-js] Deploying Chaincode - Complete");
 				cb(null, data);
 			}, 40000);														//wait extra long, not always ready yet
 		}
 	};
 	options.failure = function(statusCode, e){
-		console.log("[obc-js] deploy - failure:", statusCode);
+		console.log("[ibc-js] deploy - failure:", statusCode);
 		if(cb) cb(eFmt('http error', statusCode, e), null);
 	};
 	rest.post(options, '', body);
@@ -603,22 +603,22 @@ function readNames(cb, lvl){
 var slow_mode = 10000;
 var fast_mode = 500;
 function heart_beat(){
-	if(obc.lastPoll + slow_mode < Date.now()){								//slow mode poll
-		//console.log('[obc-js] Its been awhile, time to poll');
-		obc.lastPoll = Date.now();
-		obc.prototype.chain_stats(cb_got_stats);
+	if(ibc.lastPoll + slow_mode < Date.now()){								//slow mode poll
+		//console.log('[ibc-js] Its been awhile, time to poll');
+		ibc.lastPoll = Date.now();
+		ibc.prototype.chain_stats(cb_got_stats);
 	}
 	else{
-		for(var i in obc.q){
-			var elasped = Date.now() - obc.q[i];
+		for(var i in ibc.q){
+			var elasped = Date.now() - ibc.q[i];
 			if(elasped <= 3000){											//fresh unresolved action, fast mode!
-				console.log('[obc-js] Unresolved action, must poll');
-				obc.lastPoll = Date.now();
-				obc.prototype.chain_stats(cb_got_stats);
+				console.log('[ibc-js] Unresolved action, must poll');
+				ibc.lastPoll = Date.now();
+				ibc.prototype.chain_stats(cb_got_stats);
 			}
 			else{
-				//console.log('[obc-js] Expired, removing');
-				obc.q.pop();												//expired action, remove it
+				//console.log('[ibc-js] Expired, removing');
+				ibc.q.pop();												//expired action, remove it
 			}
 		}
 	}
@@ -627,19 +627,19 @@ function heart_beat(){
 function cb_got_stats(e, stats){
 	if(e == null){
 		if(stats && stats.height){
-			if(obc.lastBlock != stats.height) {									//this is a new block!
-				console.log('[obc-js] New block!', stats.height);
-				obc.lastBlock  = stats.height;
-				obc.q.pop();													//action is resolved, remove
-				if(obc.monitorFunction) obc.monitorFunction(stats);				//call the user's callback
+			if(ibc.lastBlock != stats.height) {									//this is a new block!
+				console.log('[ibc-js] New block!', stats.height);
+				ibc.lastBlock  = stats.height;
+				ibc.q.pop();													//action is resolved, remove
+				if(ibc.monitorFunction) ibc.monitorFunction(stats);				//call the user's callback
 			}
 		}
 	}
 }
 
-obc.prototype.monitor_blockheight = function(cb) {							//hook in your own function, triggers when chain grows
+ibc.prototype.monitor_blockheight = function(cb) {							//hook in your own function, triggers when chain grows
 	setInterval(function(){heart_beat();}, fast_mode);
-	obc.monitorFunction = cb;												//store it
+	ibc.monitorFunction = cb;												//store it
 };
 
 
@@ -651,10 +651,10 @@ obc.prototype.monitor_blockheight = function(cb) {							//hook in your own func
 //==================================================================
 function populate_go_chaincode(name){
 	if(chaincode[name] != null){
-		//console.log('[obc-js] \t skip, already exists');					//skip
+		//console.log('[ibc-js] \t skip, already exists');					//skip
 	}
 	else {
-		console.log('[obc-js] Found cc function: ', name);
+		console.log('[ibc-js] Found cc function: ', name);
 		chaincode.details.func.push(name);
 		chaincode[name] = function(args, cb){								//create the functions in chaincode obj
 			var options = {path: '/devops/invoke'};
@@ -668,17 +668,17 @@ function populate_go_chaincode(name){
 							function: name,
 							args: args
 						},
-						secureContext: chaincode.details.peers[obc.selectedPeer].user
+						secureContext: chaincode.details.peers[ibc.selectedPeer].user
 					}
 			};
 
 			options.success = function(statusCode, data){
-				console.log("[obc-js]", name, " - success:", data);
-				obc.q.push(Date.now());
+				console.log("[ibc-js]", name, " - success:", data);
+				ibc.q.push(Date.now());
 				if(cb) cb(null, data);
 			};
 			options.failure = function(statusCode, e){
-				console.log("[obc-js]", name, " - failure:", statusCode);
+				console.log("[ibc-js]", name, " - failure:", statusCode);
 				if(cb) cb(eFmt('http error', statusCode, e), null);
 			};
 			rest.post(options, '', body);
@@ -712,4 +712,4 @@ function eFmt(name, code, details){
 
 
 
-module.exports = obc;
+module.exports = ibc;
