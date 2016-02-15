@@ -1,14 +1,14 @@
 {
-  "name": "obc-js",
+  "name": "ibm-blockchain-js",
   "version": "0.0.3",
-  "description": "A set of libraries for easily interacting with Open Block Chain.",
+  "description": "A set of libraries for easily interacting with IBM's Blockchain.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git@github.ibm.com:openblockchain/obc-js.git"
+    "url": "https://github.com/IBM-Blockchain/ibm-blockchain-js.git"
   },
   "keywords": [
     "blockchain",

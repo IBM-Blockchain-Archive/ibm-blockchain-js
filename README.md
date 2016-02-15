@@ -1,7 +1,7 @@
-obc.js
+ibm-blockchain-js
 =========
 
-A set of libraries for easily interacting with Open Block Chain.
+A set of libraries for easily interacting with IBM's Blockchain
 
 *Version*: 0.0.3
 *Updated*: 01/19/2016
@@ -9,13 +9,13 @@ A set of libraries for easily interacting with Open Block Chain.
 ## Installation
 
 ```
-npm install obc-js --save
+npm install ibm-blockchain-js --save
 ```
 
 ## Usage
 
 ```
-var obc = require('obc-js')
+var obc = require('ibm-blockchain-js')
   
 //add usage stuff
 ```
