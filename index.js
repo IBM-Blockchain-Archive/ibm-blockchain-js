@@ -69,8 +69,8 @@ ibc.prototype.load = function(options, cb){
 	
 	// Step 2 - optional - only for secure networks
 	if(options.network.users){
-		options.network.users = filter_users(options.network.users);				//do not use ids that are for the peers
-		
+		options.network.users = filter_users(options.network.users);				//only use the appropriate IDs
+
 		var arr = [];
 		for(var i in chaincode.details.peers){
 			arr.push(i);															//build the list of indexes
@@ -687,12 +687,12 @@ function populate_go_chaincode(name){
 }
 
 //==================================================================
-//filter_users() - remove users that are for the peers
+//filter_users() - only get client level usernames - [1=client, 2=nvp, 4=vp, 8=auditor accurate as of 2/18]
 //==================================================================
 function filter_users(users){
 	var valid_users = [];
 	for(var i = 0; i < users.length; i++) {
-		if(users[i].username.indexOf('user') == 0){
+		if(users[i].username.indexOf('user_type1') == 0){		//type should be 1 for client
 			valid_users.push(users[i]);
 		}
 	}
