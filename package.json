@@ -19,8 +19,9 @@
     "transaction"
   ],
   "dependencies": {
-    "decompress": "3.0.0",
-	"async": "1.5.2"
+    "adm-zip": "^0.4.7",
+    "async": "1.5.2",
+    "decompress": "3.0.0"
   },
   "author": {
     "name": "David Huffman and Ben Smith"
