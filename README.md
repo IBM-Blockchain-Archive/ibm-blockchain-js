@@ -28,7 +28,7 @@ npm install ibm-blockchain-js
 1. Use dot notation on chaincode to call any of your chaincode functions ie:
 
 ```js
-		chaincode.read('a', cb);			//will read variable "a" from current chaincode state
+		chaincode.read('a', cb);			//will read/query variable "a" from current chaincode state
 		chaincode.write('a', "test", cb)	//will write to vairable "a"
 		chaincode.remove('a', cb)			//will delete variable "a"
 		chaincode.init_marbles(ARGS, cb);	//calls my custom chaincode function init_marbles() and passes it ARGS
@@ -149,7 +149,8 @@ Example
 ### ibc.network(arrayPeers)
 Set the information about the peers in the network.
 This should be an array of peer objects.  
-Example:
+
+Ex:
 
 ```js
 	var peers = [
@@ -166,14 +167,34 @@ Example:
 ### ibc.save(path [callback])
 Save the [Chaincode Summary File](#ccsf) to a path.
 
+Ex:
+
+```js
+	ibc.save('./');
+```
 
 ### ibc.clear([callback])
 Clear any loaded chaincode files including the downloaded chaincode repo, and [Chaincode Summary File](#ccsf).
 
+Ex:
+
+```js
+	ibc.clear();
+```
 
 ### ibc.chain_stats([callback])
 Get statistics on the network's chain.  
-Example Response:
+
+Ex:
+
+```js
+	ibc.chain_stats(my_callback);
+	function my_callback(e, stats){
+		console.log('got some stats', stats);
+	}
+```
+
+Example Chain Stats:
 
 ```js
 	{
@@ -185,7 +206,17 @@ Example Response:
 
 ### ibc.block_stats(id, [callback])
 Get statistics on a particular block in the chain.  
-Example Response:
+
+Ex:
+
+```js
+	ibc.block_stats(my_callback);
+	function my_callback(e, stats){
+		console.log('got some stats', stats);
+	}
+```
+
+Example Block Stats:
 
 ```js
 	{
@@ -214,7 +245,8 @@ Example Response:
 
 ### ibc.switchPeer(peerIndex)
 The SDK will default to use peer[0].  This function will switch the default peer to another index.  
-Example:
+
+Ex:
 	
 ```js
 	ibc.switchPeer(2);
@@ -224,10 +256,23 @@ Example:
 Only applicable oo a network with security enabled. 
 register() will register against peer[peerIndex] with the provided credentials.
 If successful the peer will now use this enrollID to perform any http requests.
-Example:
+
+Ex:
 	
 ```js
 	ibc.register(3, 'user1', 'xxxxxx', my_cb);
+```
+
+### ibc.monitor_blockheight(callback)
+This will call your callback function whenever the block height has changed.
+
+Ex:
+
+```js
+	ibc.monitor_blockheight(my_callback);
+	function my_callback(e, chainstats){
+		console.log('got a new block!', chainstats);
+	}
 ```
 
 ***
@@ -237,14 +282,17 @@ Example:
 - Chaincode functions are dependent on actually be found inside your Go chaincode
 - My advise is to build your chaincode off of the Marble Application one.  This way you get the basic CRUD functions below:
 
-### chaincode.read(name [callback])
-Read variable named 'name' from chaincode state
+### chaincode.read(name, [callback])
+Read variable named 'name' from chaincode state. This will call the Query() function in the Go chaincode, therefore the Query() function needs to exists in the cc.
+
+### chaincode.query(name, [callback])
+Same as chaincode.read() above
 
 ### chaincode.write(name, val, [callback])
-Write 'val' to variable named 'name'
+Write 'val' to variable named 'name'. This will call the write() function in the Go chaincode, therefore the write() function needs to exists in the cc.
 
 ### chaincode.remove(name, [callback])
-Delete variable named 'name'
+Delete variable named 'name'. This will call the delete() function in the Go chaincode, therefore the delete() function needs to exists in the cc.
 
 ### chaincode.deploy(func, args, [save_path], [callback])
 Deploy the chaincode. 
