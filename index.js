@@ -22,6 +22,7 @@ var AdmZip = require('adm-zip');
 
 var chaincode = {
 					read: null,
+					query: null,
 					write: null,
 					remove: null,
 					deploy: null,
@@ -234,6 +235,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 					
 					// Step 3.
 					chaincode.read = read;
+					chaincode.query = read;
 					chaincode.write = write;
 					chaincode.remove = remove;
 					chaincode.deploy = deploy;
