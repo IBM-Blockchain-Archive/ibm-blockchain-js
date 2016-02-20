@@ -26,7 +26,6 @@ var chaincode = {
 					write: null,
 					remove: null,
 					deploy: null,
-					readNames: null,
 					details:{
 								deployed_name: '',
 								func: [],
@@ -590,14 +589,6 @@ function deploy(func, args, save_path, cb){
 	};
 	rest.post(options, '', body);
 }
-
-//============================================================================================================================
-//readNames() - read all variable names in chaincode state
-//============================================================================================================================
-function readNames(cb, lvl){
-	read('_all', cb, lvl);
-}
-
 
 //============================================================================================================================
 //heart_beat() - interval function to poll against blockchain height (has fast and slow mode)

@@ -299,9 +299,6 @@ Deploy the chaincode.
 Call GoLang function named 'func' and feed it 'args'.
 Optionally save [Chaincode Summary File](#ccsf) to 'save_path'.
 
-### chaincode.readNames([callback])
-Return list of all known variables names in chaincode state
-
 ### chaincode.CUSTOM_FUNCTION_NAME(arg, [callback])
 Will invoke your Go function CUSTOM_FUNCTION_NAME and pass it 'arg'.  **Note the name will be all lowercase**
 
@@ -318,11 +315,11 @@ Will invoke your Go function CUSTOM_FUNCTION_NAME and pass it 'arg'.  **Note the
 			CUSTOM_FUNCTION_NAME2: function(args, cb){etc...};
 			CUSTOM_FUNCTION_NAME3: function(args, cb){etc...};
 			^^ etc...
-			read: function(name, cb, lvl),						//read variable
+			read: function(name, cb),							//read variable
+			query: function(name, cb),							//^^
 			write: function(name, value, cb),					//write/create variable
 			remove: function(name, cb),							//delete variable
 			deploy: function(func, arg, path, cb),				//deploy loaded chaincode
-			readNames: function(cb, lvl),						//read all known variable names from state
 			details:{
 						deployed_name: '',
 						func: [],
