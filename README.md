@@ -28,7 +28,8 @@ npm install ibm-blockchain-js
 1. Use dot notation on chaincode to call any of your chaincode functions ie:
 
 ```js
-		chaincode.read('a', cb);			//will read/query variable "a" from current chaincode state
+		// The functions below need to exist in your actual chaincode GoLang file(s) 
+		chaincode.read('a', cb);			//will read variable "a" from current chaincode state
 		chaincode.write('a', "test", cb)	//will write to vairable "a"
 		chaincode.remove('a', cb)			//will delete variable "a"
 		chaincode.init_marbles(ARGS, cb);	//calls my custom chaincode function init_marbles() and passes it ARGS
@@ -132,7 +133,9 @@ Options Parameter:
 Load the chaincode you want to use. 
 It will be downloaded and parsed. 
 The callback will receive (e, obj) where e is the error format and obj is the chaincode object.
-The chaincode object will have dot notation to the functions in the chaincode.  
+"e" is null when there are no errors.
+The chaincode object will have dot notation to the functions in the your chaincode. 
+
 Example
 	
 ```js
@@ -148,7 +151,7 @@ Example
 
 ### ibc.network(arrayPeers)
 Set the information about the peers in the network.
-This should be an array of peer objects.  
+This should be an array of peer objects. 
 
 Ex:
 
