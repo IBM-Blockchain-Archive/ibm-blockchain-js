@@ -234,7 +234,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 					
 					// Step 3.
 					chaincode.read = read;
-					chaincode.query = read;
+					chaincode.query = query;
 					chaincode.write = write;
 					chaincode.remove = remove;
 					chaincode.deploy = deploy;
@@ -450,6 +450,38 @@ function read(name, cb, lvl){										//lvl is for reading past state blocks, t
 	};
 	options.failure = function(statusCode, e){
 		console.log("[ibc-js] Read - failure:", statusCode);
+		if(cb) cb(eFmt('http error', statusCode, e), null);
+	};
+	rest.post(options, '', body);
+}
+
+//============================================================================================================================
+//query() - read generic variable from chaincode state
+//============================================================================================================================
+function query(args, cb, lvl){										//lvl is for reading past state blocks, tbd exactly
+	var options = {
+		path: '/devops/query'
+	};
+	var body = {
+					chaincodeSpec: {
+						type: "GOLANG",
+						chaincodeID: {
+							name: chaincode.details.deployed_name,
+						},
+						ctorMsg: {
+							function: "query",
+							args: args
+						},
+						secureContext: chaincode.details.peers[ibc.selectedPeer].user
+					}
+				};
+	console.log('body', body);
+	options.success = function(statusCode, data){
+		console.log("[ibc-js] Query - success:", data);
+		if(cb) cb(null, data.OK);
+	};
+	options.failure = function(statusCode, e){
+		console.log("[ibc-js] Query - failure:", statusCode);
 		if(cb) cb(eFmt('http error', statusCode, e), null);
 	};
 	rest.post(options, '', body);

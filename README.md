@@ -30,6 +30,7 @@ npm install ibm-blockchain-js
 ```js
 		// The functions below need to exist in your actual chaincode GoLang file(s) 
 		chaincode.read('a', cb);			//will read variable "a" from current chaincode state
+		chaincode.query(['test'], cb);		//will read the variable "test"
 		chaincode.write('a', "test", cb)	//will write to vairable "a"
 		chaincode.remove('a', cb)			//will delete variable "a"
 		chaincode.init_marbles(ARGS, cb);	//calls my custom chaincode function init_marbles() and passes it ARGS
@@ -286,10 +287,13 @@ Ex:
 - My advise is to build your chaincode off of the Marble Application one.  This way you get the basic CRUD functions below:
 
 ### chaincode.read(name, [callback])
-Read variable named 'name' from chaincode state. This will call the Query() function in the Go chaincode, therefore the Query() function needs to exists in the cc.
+Read variable named name from chaincode state. 
+This will call the `Query()` function in the Go chaincode, therefore the `Query()` function needs to exists in the cc. 
+The variable name will be passed as `arg[0]` to `Query()`. 
 
-### chaincode.query(name, [callback])
-Same as chaincode.read() above
+### chaincode.query([args], [callback])
+This will call the query function with custom input arguments. 
+Usually "args" is an array of strings. 
 
 ### chaincode.write(name, val, [callback])
 Write 'val' to variable named 'name'. This will call the write() function in the Go chaincode, therefore the write() function needs to exists in the cc.
@@ -300,10 +304,12 @@ Delete variable named 'name'. This will call the delete() function in the Go cha
 ### chaincode.deploy(func, args, [save_path], [callback])
 Deploy the chaincode. 
 Call GoLang function named 'func' and feed it 'args'.
-Optionally save [Chaincode Summary File](#ccsf) to 'save_path'.
+Optionally save [Chaincode Summary File](#ccsf) to 'save_path'. 
+Usualy "args" is an array of strings.
 
-### chaincode.CUSTOM_FUNCTION_NAME(arg, [callback])
-Will invoke your Go function CUSTOM_FUNCTION_NAME and pass it 'arg'.  **Note the name will be all lowercase**
+### chaincode.CUSTOM_FUNCTION_NAME(args, [callback])
+Will invoke your Go function CUSTOM_FUNCTION_NAME and pass it 'arg'. 
+Usualy "args" is an array of strings.
 
 ***
 ***
