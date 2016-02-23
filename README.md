@@ -291,15 +291,15 @@ Read variable named name from chaincode state.
 This will call the `Query()` function in the Go chaincode, therefore the `Query()` function needs to exists in the cc. 
 The variable name will be passed as `arg[0]` to `Query()`. 
 
-### chaincode.query([args], [callback])
+### chaincode.query(args, [callback])
 This will call the query function with custom input arguments. 
 Usually "args" is an array of strings. 
 
 ### chaincode.write(name, val, [callback])
-Write 'val' to variable named 'name'. This will call the write() function in the Go chaincode, therefore the write() function needs to exists in the cc.
+Write 'val' to variable named 'name'. This will call the `write()` function in the Go chaincode, therefore the `write()` function needs to exists in the cc.
 
 ### chaincode.remove(name, [callback])
-Delete variable named 'name'. This will call the delete() function in the Go chaincode, therefore the delete() function needs to exists in the cc.
+Delete variable named 'name'. This will call the `delete()` function in the Go chaincode, therefore the `delete()` function needs to exists in the cc.
 
 ### chaincode.deploy(func, args, [save_path], [callback])
 Deploy the chaincode. 
