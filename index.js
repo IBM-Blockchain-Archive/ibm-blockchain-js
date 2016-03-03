@@ -5,11 +5,11 @@
  * Copyright (c) 2016 IBM Corp.
  *
  * All rights reserved. 
- *   
+ *
  *******************************************************************************/
 /*
-	Version: 0.2
-	Updated: 01/20/2016
+	Version: 0.0.7
+	Updated: 03/03/2016
 */
 
 //Load modules
@@ -20,7 +20,9 @@ var async = require('async');
 var rest = require(__dirname + "/lib/rest");
 var AdmZip = require('adm-zip');
 
-var chaincode = {
+
+function ibc() {}
+ibc.chaincode = {
 					read: null,
 					query: null,
 					write: null,
@@ -31,13 +33,12 @@ var chaincode = {
 								func: [],
 								git_url: '',
 								peers: [],
+								users: [],
 								vars: [],
 								unzip_dir: '',
 								zip_url: '',
 					}
 				};
-
-function ibc() {}
 ibc.selectedPeer = 0;
 ibc.q = [];
 ibc.lastPoll = 0;
@@ -69,10 +70,12 @@ ibc.prototype.load = function(options, cb){
 	
 	// Step 2 - optional - only for secure networks
 	if(options.network.users){
-		options.network.users = filter_users(options.network.users);				//only use the appropriate IDs
-
+		options.network.users = filter_users(options.network.users);				//only use the appropriate IDs filter out the rest
+	}
+	if(options.network.users && options.network.users.length > 0){
+		ibc.chaincode.details.users = options.network.users;
 		var arr = [];
-		for(var i in chaincode.details.peers){
+		for(var i in ibc.chaincode.details.peers){
 			arr.push(i);															//build the list of indexes
 		}
 		async.each(arr, function(i, a_cb) {
@@ -85,6 +88,8 @@ ibc.prototype.load = function(options, cb){
 		});
 	}
 	else{
+		ibc.chaincode.details.users = [];
+		console.log('[ibc-js] No membership users found after filtering, assuming this is a network w/o membership');
 		load_cc();
 	}
 	
@@ -119,15 +124,15 @@ ibc.prototype.load_chaincode = function(options, cb) {
 	var zip_dest = path.join(tempDirectory,  '/file.zip');								//	=./temp/file.zip
 	var unzip_dest = path.join(tempDirectory,  '/unzip');								//	=./temp/unzip
 	var unzip_cc_dest = path.join(unzip_dest, '/', options.unzip_dir);					//	=./temp/unzip/DIRECTORY
-	chaincode.details.zip_url = options.zip_url;
-	chaincode.details.unzip_dir = options.unzip_dir;
-	chaincode.details.git_url = options.git_url;
+	ibc.chaincode.details.zip_url = options.zip_url;
+	ibc.chaincode.details.unzip_dir = options.unzip_dir;
+	ibc.chaincode.details.git_url = options.git_url;
+	ibc.chaincode.details.deployed_name = options.deployed_name;
 
 	if(!options.deployed_name || options.deployed_name == ''){							//lets clear and re-download
 		ibc.prototype.clear(cb_ready);
 	}
 	else{
-		chaincode.details.deployed_name = options.deployed_name;
 		cb_ready();
 	}
 	
@@ -166,7 +171,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 		}).on('error', function(err) {
 			console.log('! [ibc-js] Download error');
 			fs.unlink(zip_dest); 													//delete the file async
-			if (cb) cb(eFmt('fs error', 500, err.message), chaincode);
+			if (cb) cb(eFmt('fs error', 500, err.message), ibc.chaincode);
 		});
 	}
 	
@@ -226,6 +231,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 				else{
 					
 					// Step 2c.
+					ibc.chaincode.details.func = [];
 					for(var i in res){												//build the rest call for each function
 						var pos = res[i].indexOf('.');
 						var temp = res[i].substring(pos + 1, res[i].length - 1);
@@ -233,12 +239,12 @@ ibc.prototype.load_chaincode = function(options, cb) {
 					}
 					
 					// Step 3.
-					chaincode.read = read;
-					chaincode.query = query;
-					chaincode.write = write;
-					chaincode.remove = remove;
-					chaincode.deploy = deploy;
-					if(cb) cb(null, chaincode);										//all done, send it to callback
+					ibc.chaincode.read = read;
+					ibc.chaincode.query = query;
+					ibc.chaincode.write = write;
+					ibc.chaincode.remove = remove;
+					ibc.chaincode.deploy = deploy;
+					if(cb) cb(null, ibc.chaincode);										//all done, send it to callback
 				}
 			}
 		}
@@ -264,6 +270,7 @@ ibc.prototype.network = function(arrayPeers){
 		console.log('! [ibc-js] Input Error - ibc.network()', errors);
 	}
 	else{
+		ibc.chaincode.details.peers = [];
 		for(var i in arrayPeers){
 			var pos = arrayPeers[i].id.indexOf('_') + 1;
 			var temp = 	{
@@ -276,17 +283,17 @@ ibc.prototype.network = function(arrayPeers){
 			temp.name = arrayPeers[i].id.substring(pos) + '-' + arrayPeers[i].api_host + ':' + arrayPeers[i].api_port;	//build friendly name
 			if(arrayPeers[i].api_url.indexOf('https') == -1) temp.ssl = false;
 			console.log('[ibc-js] Peer: ', temp.name);
-			chaincode.details.peers.push(temp);
+			ibc.chaincode.details.peers.push(temp);
 		}
 
 		rest.init({																	//load default values for rest call to peer
-					host: chaincode.details.peers[0].api_host,
-					port: chaincode.details.peers[0].api_port,
+					host: ibc.chaincode.details.peers[0].api_host,
+					port: ibc.chaincode.details.peers[0].api_port,
 					headers: {
 								"Content-Type": "application/json",
 								"Accept": "application/json",
 							},
-					ssl: chaincode.details.peers[0].ssl,
+					ssl: ibc.chaincode.details.peers[0].ssl,
 					timeout: 60000,
 					quiet: true
 		});
@@ -298,15 +305,15 @@ ibc.prototype.network = function(arrayPeers){
 // EXTERNAL - switchPeer() - switch the default peer to hit
 // ============================================================================================================================
 ibc.prototype.switchPeer = function(index) {
-	if(chaincode.details.peers[index]) {
+	if(ibc.chaincode.details.peers[index]) {
 		rest.init({																	//load default values for rest call to peer
-					host: chaincode.details.peers[index].api_host,
-					port: chaincode.details.peers[index].api_port,
+					host: ibc.chaincode.details.peers[index].api_host,
+					port: ibc.chaincode.details.peers[index].api_port,
 					headers: {
 								"Content-Type": "application/json",
 								"Accept": "application/json",
 							},
-					ssl: chaincode.details.peers[index].ssl,
+					ssl: ibc.chaincode.details.peers[index].ssl,
 					timeout: 60000,
 					quiet: true
 		});
@@ -329,9 +336,9 @@ ibc.prototype.save =  function(dir, cb){
 	}
 	else{
 		var fn = 'chaincode.json';														//default name
-		if(chaincode.details.deployed_name) fn = chaincode.details.deployed_name + '.json';
+		if(ibc.chaincode.details.deployed_name) fn = ibc.chaincode.details.deployed_name + '.json';
 		var dest = path.join(dir, fn);
-		fs.writeFile(dest, JSON.stringify({details: chaincode.details}), function(e){
+		fs.writeFile(dest, JSON.stringify({details: ibc.chaincode.details}), function(e){
 			if(e != null){
 				console.log(e);
 				if(cb) cb(eFmt('fs write error', 500, e), null);
@@ -349,7 +356,7 @@ ibc.prototype.save =  function(dir, cb){
 // ============================================================================================================================
 ibc.prototype.clear =  function(cb){
 	console.log('[ibc-js] removing temp dir');
-	removeThing(tempDirectory, cb);
+	removeThing(tempDirectory, cb);											//remove everything in this directory
 };
 
 function removeThing(dir, cb){
@@ -359,7 +366,7 @@ function removeThing(dir, cb){
 			cb();
 		}
 		else{
-			async.each(files, function (file, cb) {						//over each thing
+			async.each(files, function (file, cb) {							//over each thing
 				file = path.join(dir, file);
 				fs.stat(file, function(err, stat) {
 					if (err) {
@@ -367,7 +374,7 @@ function removeThing(dir, cb){
 						return;
 					}
 					if (stat.isDirectory()) {
-						removeThing(file, cb);							//keep going
+						removeThing(file, cb);								//keep going
 					}
 					else {
 						//console.log('!', dir);
@@ -401,7 +408,7 @@ function removeThing(dir, cb){
 // EXTERNAL chain_stats() - get blockchain stats
 //============================================================================================================================
 ibc.prototype.chain_stats =  function(cb){
-	var options = {path: '/chain'};
+	var options = {path: '/chain'};									//very simple API, get chainstats!
 
 	options.success = function(statusCode, data){
 		console.log("[ibc-js] Chain Stats - success");
@@ -442,13 +449,13 @@ function read(name, cb, lvl){										//lvl is for reading past state blocks, t
 					chaincodeSpec: {
 						type: "GOLANG",
 						chaincodeID: {
-							name: chaincode.details.deployed_name,
+							name: ibc.chaincode.details.deployed_name,
 						},
 						ctorMsg: {
 							function: "query",
 							args: [name]
 						},
-						secureContext: chaincode.details.peers[ibc.selectedPeer].user
+						secureContext: ibc.chaincode.details.peers[ibc.selectedPeer].user
 					}
 				};
 	//console.log('body', body);
@@ -474,13 +481,13 @@ function query(args, cb, lvl){										//lvl is for reading past state blocks, 
 					chaincodeSpec: {
 						type: "GOLANG",
 						chaincodeID: {
-							name: chaincode.details.deployed_name,
+							name: ibc.chaincode.details.deployed_name,
 						},
 						ctorMsg: {
 							function: "query",
 							args: args
 						},
-						secureContext: chaincode.details.peers[ibc.selectedPeer].user
+						secureContext: ibc.chaincode.details.peers[ibc.selectedPeer].user
 					}
 				};
 	console.log('body', body);
@@ -506,13 +513,13 @@ function write(name, val, cb){
 					chaincodeSpec: {
 						type: "GOLANG",
 						chaincodeID: {
-							name: chaincode.details.deployed_name,
+							name: ibc.chaincode.details.deployed_name,
 						},
 						ctorMsg: {
 							function: 'write',
 							args: [name, val]
 						},
-						secureContext: chaincode.details.peers[ibc.selectedPeer].user
+						secureContext: ibc.chaincode.details.peers[ibc.selectedPeer].user
 					}
 				};
 	
@@ -539,13 +546,13 @@ function remove(name, cb){
 					chaincodeSpec: {
 						type: "GOLANG",
 						chaincodeID: {
-							name: chaincode.details.deployed_name,
+							name: ibc.chaincode.details.deployed_name,
 						},
 						ctorMsg: {
 							function: 'delete',
 							args: [name]
 						},
-						secureContext: chaincode.details.peers[ibc.selectedPeer].user
+						secureContext: ibc.chaincode.details.peers[ibc.selectedPeer].user
 					}
 				};
 
@@ -565,12 +572,12 @@ function remove(name, cb){
 //register() - register a username with a peer (only for a secured blockchain network)
 //============================================================================================================================
 ibc.prototype.register = function(index, enrollID, enrollSecret, cb) {
-	console.log("[ibc-js] Registering ", chaincode.details.peers[index].name, " w/enrollID - " + enrollID);
+	console.log("[ibc-js] Registering ", ibc.chaincode.details.peers[index].name, " w/enrollID - " + enrollID);
 	var options = {
 		path: '/registrar',
-		host: chaincode.details.peers[index].api_host,
-		port: chaincode.details.peers[index].api_port,
-		ssl: chaincode.details.peers[index].ssl
+		host: ibc.chaincode.details.peers[index].api_host,
+		port: ibc.chaincode.details.peers[index].api_port,
+		ssl: ibc.chaincode.details.peers[index].ssl
 	};
 
 	var body = 	{
@@ -580,7 +587,7 @@ ibc.prototype.register = function(index, enrollID, enrollSecret, cb) {
 
 	options.success = function(statusCode, data){
 		console.log("[ibc-js] Registration success:", enrollID);
-		chaincode.details.peers[index].user = enrollID;							//remember the user for this peer
+		ibc.chaincode.details.peers[index].user = enrollID;					//remember the user for this peer
 		if(cb){
 			cb(null, data);
 		}
@@ -602,18 +609,18 @@ function deploy(func, args, save_path, cb){
 	var body = 	{
 					type: "GOLANG",
 					chaincodeID: {
-							path: chaincode.details.git_url
+							path: ibc.chaincode.details.git_url
 						},
 					ctorMsg:{
 							"function": func,
 							"args": args
 					},
-					secureContext: chaincode.details.peers[ibc.selectedPeer].user
+					secureContext: ibc.chaincode.details.peers[ibc.selectedPeer].user
 				};
 	//console.log('!body', body);
 	options.success = function(statusCode, data){
 		console.log("\n\n\t deploy success [wait 1 more minute]");
-		chaincode.details.deployed_name = data.message;
+		ibc.chaincode.details.deployed_name = data.message;
 		ibc.prototype.save(tempDirectory);									//save it so we remember we have deployed
 		if(save_path != null) ibc.prototype.save(save_path);				//user wants the updated file somewhere
 		if(cb){
@@ -660,11 +667,11 @@ function heart_beat(){
 function cb_got_stats(e, stats){
 	if(e == null){
 		if(stats && stats.height){
-			if(ibc.lastBlock != stats.height) {									//this is a new block!
+			if(ibc.lastBlock != stats.height) {								//this is a new block!
 				console.log('[ibc-js] New block!', stats.height);
 				ibc.lastBlock  = stats.height;
-				ibc.q.pop();													//action is resolved, remove
-				if(ibc.monitorFunction) ibc.monitorFunction(stats);				//call the user's callback
+				ibc.q.pop();												//action is resolved, remove
+				if(ibc.monitorFunction) ibc.monitorFunction(stats);			//call the user's callback
 			}
 		}
 	}
@@ -683,25 +690,25 @@ ibc.prototype.monitor_blockheight = function(cb) {							//hook in your own func
 //populate_chaincode() - create JS call for custom goLang function, stored in chaincode var!
 //==================================================================
 function populate_go_chaincode(name){
-	if(chaincode[name] != null){
+	if(ibc.chaincode[name] != null){
 		//console.log('[ibc-js] \t skip, already exists');					//skip
 	}
 	else {
 		console.log('[ibc-js] Found cc function: ', name);
-		chaincode.details.func.push(name);
-		chaincode[name] = function(args, cb){								//create the functions in chaincode obj
+		ibc.chaincode.details.func.push(name);
+		ibc.chaincode[name] = function(args, cb){							//create the functions in chaincode obj
 			var options = {path: '/devops/invoke'};
 			var body = {
 					chaincodeSpec: {
 						type: "GOLANG",
 						chaincodeID: {
-							name: chaincode.details.deployed_name,
+							name: ibc.chaincode.details.deployed_name,
 						},
 						ctorMsg: {
 							function: name,
 							args: args
 						},
-						secureContext: chaincode.details.peers[ibc.selectedPeer].user
+						secureContext: ibc.chaincode.details.peers[ibc.selectedPeer].user
 					}
 			};
 
@@ -725,7 +732,7 @@ function populate_go_chaincode(name){
 function filter_users(users){
 	var valid_users = [];
 	for(var i = 0; i < users.length; i++) {
-		if(users[i].username.indexOf('user_type1') == 0){		//type should be 1 for client
+		if(users[i].username.indexOf('user_type1') == 0){				//type should be 1 for client
 			valid_users.push(users[i]);
 		}
 	}
@@ -742,7 +749,5 @@ function eFmt(name, code, details){
 		details: details
 	};
 }
-
-
 
 module.exports = ibc;
