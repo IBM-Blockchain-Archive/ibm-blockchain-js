@@ -252,6 +252,14 @@ ibc.prototype.network = function(arrayPeers){
 	var errors = [];
 	if(!arrayPeers) errors.push("network input arg should be array of peer objects");
 	else if(arrayPeers.constructor !== Array) errors.push("network input arg should be array of peer objects");
+	
+	for(var i in arrayPeers){														//check for errors in peers
+		if(!arrayPeers[i].id) 		errors.push("peer " + i + " is missing the field id");
+		if(!arrayPeers[i].api_host) errors.push("peer " + i + " is missing the field api_host");
+		if(!arrayPeers[i].api_port) errors.push("peer " + i + " is missing the field api_port");
+		if(!arrayPeers[i].api_url)  errors.push("peer " + i + " is missing the field api_url");
+	}
+	
 	if(errors.length > 0){															//check for input errors
 		console.log('! [ibc-js] Input Error - ibc.network()', errors);
 	}
