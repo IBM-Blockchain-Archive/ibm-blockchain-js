@@ -73,7 +73,7 @@ ibc.prototype.load = function(options, cb){
 		options.network.users = filter_users(options.network.users);				//only use the appropriate IDs filter out the rest
 	}
 	if(options.network.users && options.network.users.length > 0){
-		ibc.chaincode.details.users = options.network.users;
+		ibc.chaincode.details.users = options.network.users;						//lets store filtered user list
 		var arr = [];
 		for(var i in ibc.chaincode.details.peers){
 			arr.push(i);															//build the list of indexes
