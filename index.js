@@ -73,7 +73,7 @@ ibc.prototype.load = function(options, cb){
 		options.network.users = filter_users(options.network.users);				//only use the appropriate IDs filter out the rest
 	}
 	if(options.network.users && options.network.users.length > 0){
-		ibc.chaincode.details.users = options.network.users;						//lets store filtered user list
+		ibc.chaincode.details.users = options.network.users;
 		var arr = [];
 		for(var i in ibc.chaincode.details.peers){
 			arr.push(i);															//build the list of indexes
@@ -208,6 +208,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 	}
 	
 	function cb_read_go_file(err, str){
+		var msg = '';
 		if(err != null) console.log('! [ibc-js] fs readfile Error', err);
 		else{
 			
@@ -215,7 +216,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 			var regex = /func\s+\((\w+)\s+\*SimpleChaincode\)\s+Run/i;				//find the variable name that Run is using for simplechaincode pointer
 			var res = str.match(regex);
 			if(!res || !res[1]){
-				var msg = 'did not find Run() function in chaincode, cannot continue';
+				msg = 'did not find Run() function in chaincode, cannot continue';
 				console.log('! [ibc-js] Error -', msg);
 				if(cb) cb(eFmt('missing run', 400, msg), null);
 			}
@@ -225,8 +226,10 @@ ibc.prototype.load_chaincode = function(options, cb) {
 				// Step 2b.
 				var re = new RegExp('\\s' + res[1] + '\\.(\\w+)\\(', "gi");			//find the function names in Run()
 				res = str.match(re);
-				if(res[1] == null){
-					console.log('[ibc-js] error did not find function names in chaincode');
+				if(!res || res.length == 0){
+					msg = 'did not find GoLang functions in chaincode';
+					console.log('[ibc-js] Error - ', msg);
+					if(cb) cb(eFmt('no go functions', 400, msg), null);
 				}
 				else{
 					
@@ -237,7 +240,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 						var temp = res[i].substring(pos + 1, res[i].length - 1);
 						populate_go_chaincode(temp);
 					}
-					
+
 					// Step 3.
 					ibc.chaincode.read = read;
 					ibc.chaincode.query = query;
