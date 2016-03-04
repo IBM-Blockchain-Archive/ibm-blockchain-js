@@ -272,6 +272,8 @@ Ex:
 
 ### ibc.monitor_blockheight(callback)
 This will call your callback function whenever the block height has changed.
+ie whenever a new block has been written to the chain.
+It will also pass you the same response as in `chain_stats()`.
 
 Ex:
 
