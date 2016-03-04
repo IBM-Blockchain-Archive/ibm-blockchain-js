@@ -40,9 +40,9 @@ ibc.chaincode = {
 					}
 				};
 ibc.selectedPeer = 0;
-ibc.q = [];
-ibc.lastPoll = 0;
-ibc.lastBlock = 0;
+ibc.q = [];																			//array of unix timestamps, 1 for each unsettled action
+ibc.lastPoll = 0;																	//unix timestamp of the last time we polled
+ibc.lastBlock = 0;																	//last blockheight found
 var tempDirectory = path.join(__dirname, "./temp");									//	=./temp - temp directory name
 
 
@@ -114,22 +114,22 @@ ibc.prototype.load_chaincode = function(options, cb) {
 	if(!options.zip_url) errors.push("the option 'zip_url' is required");
 	if(!options.unzip_dir) errors.push("the option 'unzip_dir' is required");
 	if(!options.git_url) errors.push("the option 'git_url' is required");
-	if(errors.length > 0){																//check for input errors
+	if(errors.length > 0){															//check for input errors
 		console.log('! [ibc-js] Input Error - ibc.load_chaincode()', errors);
 		if(cb) cb(eFmt('input error', 400, errors));
-		return;																			//get out of dodge
+		return;																		//get out of dodge
 	}
 	
 	var keep_looking = true;
-	var zip_dest = path.join(tempDirectory,  '/file.zip');								//	=./temp/file.zip
-	var unzip_dest = path.join(tempDirectory,  '/unzip');								//	=./temp/unzip
-	var unzip_cc_dest = path.join(unzip_dest, '/', options.unzip_dir);					//	=./temp/unzip/DIRECTORY
+	var zip_dest = path.join(tempDirectory,  '/file.zip');							//	=./temp/file.zip
+	var unzip_dest = path.join(tempDirectory,  '/unzip');							//	=./temp/unzip
+	var unzip_cc_dest = path.join(unzip_dest, '/', options.unzip_dir);				//	=./temp/unzip/DIRECTORY
 	ibc.chaincode.details.zip_url = options.zip_url;
 	ibc.chaincode.details.unzip_dir = options.unzip_dir;
 	ibc.chaincode.details.git_url = options.git_url;
 	ibc.chaincode.details.deployed_name = options.deployed_name;
 
-	if(!options.deployed_name || options.deployed_name == ''){							//lets clear and re-download
+	if(!options.deployed_name || options.deployed_name == ''){						//lets clear and re-download
 		ibc.prototype.clear(cb_ready);
 	}
 	else{
@@ -140,14 +140,14 @@ ibc.prototype.load_chaincode = function(options, cb) {
 	function cb_ready(){
 		try{fs.mkdirSync(tempDirectory);}
 		catch(e){ }
-		fs.access(unzip_cc_dest, cb_file_exists);										//check if files exist yet
+		fs.access(unzip_cc_dest, cb_file_exists);									//check if files exist yet
 		function cb_file_exists(e){
 			if(e != null){
-				download_it(options.zip_url);											//nope, go download it
+				download_it(options.zip_url);										//nope, go download it
 			}
 			else{
 				console.log('[ibc-js] Found chaincode in local file system');
-				fs.readdir(unzip_cc_dest, cb_got_names);								//yeppers, go use it
+				fs.readdir(unzip_cc_dest, cb_got_names);							//yeppers, go use it
 			}
 		}
 	}
@@ -238,7 +238,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 					for(var i in res){												//build the rest call for each function
 						var pos = res[i].indexOf('.');
 						var temp = res[i].substring(pos + 1, res[i].length - 1);
-						populate_go_chaincode(temp);
+						build_chaincode_func(temp);
 					}
 
 					// Step 3.
@@ -247,7 +247,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 					ibc.chaincode.write = write;
 					ibc.chaincode.remove = remove;
 					ibc.chaincode.deploy = deploy;
-					if(cb) cb(null, ibc.chaincode);										//all done, send it to callback
+					if(cb) cb(null, ibc.chaincode);									//all done, send it to callback
 				}
 			}
 		}
@@ -444,7 +444,7 @@ ibc.prototype.block_stats =  function(id, cb){
 //============================================================================================================================
 //read() - read generic variable from chaincode state
 //============================================================================================================================
-function read(name, cb, lvl){										//lvl is for reading past state blocks, tbd exactly
+function read(name, cb){
 	var options = {
 		path: '/devops/query'
 	};
@@ -476,7 +476,7 @@ function read(name, cb, lvl){										//lvl is for reading past state blocks, t
 //============================================================================================================================
 //query() - read generic variable from chaincode state
 //============================================================================================================================
-function query(args, cb, lvl){										//lvl is for reading past state blocks, tbd exactly
+function query(args, cb){
 	var options = {
 		path: '/devops/query'
 	};
@@ -528,7 +528,7 @@ function write(name, val, cb){
 	
 	options.success = function(statusCode, data){
 		console.log("[ibc-js] Write - success:", data);
-		ibc.q.push(Date.now());
+		ibc.q.push(Date.now());																//new action, add it to queue
 		if(cb) cb(null, data);
 	};
 	options.failure = function(statusCode, e){
@@ -561,7 +561,7 @@ function remove(name, cb){
 
 	options.success = function(statusCode, data){
 		console.log("[ibc-js] Remove - success:", data);
-		ibc.q.push(Date.now());
+		ibc.q.push(Date.now());																//new action, add it to queue
 		if(cb) cb(null, data);
 	};
 	options.failure = function(statusCode, e){
@@ -572,7 +572,7 @@ function remove(name, cb){
 }
 
 //============================================================================================================================
-//register() - register a username with a peer (only for a secured blockchain network)
+// EXTERNAL - register() - register a username with a peer (only for a secured blockchain network)
 //============================================================================================================================
 ibc.prototype.register = function(index, enrollID, enrollSecret, cb) {
 	console.log("[ibc-js] Registering ", ibc.chaincode.details.peers[index].name, " w/enrollID - " + enrollID);
@@ -680,6 +680,9 @@ function cb_got_stats(e, stats){
 	}
 }
 
+//============================================================================================================================
+// EXTERNAL- monitor_blockheight() - exposed function that user can use to get callback when any new block is written to the chain
+//============================================================================================================================
 ibc.prototype.monitor_blockheight = function(cb) {							//hook in your own function, triggers when chain grows
 	setInterval(function(){heart_beat();}, fast_mode);
 	ibc.monitorFunction = cb;												//store it
@@ -690,16 +693,16 @@ ibc.prototype.monitor_blockheight = function(cb) {							//hook in your own func
 //============================================================================================================================
 //													Helper Functions() 
 //============================================================================================================================
-//populate_chaincode() - create JS call for custom goLang function, stored in chaincode var!
+//build_chaincode_func() - create JS function that calls the custom goLang function in the chaincode
 //==================================================================
-function populate_go_chaincode(name){
-	if(ibc.chaincode[name] != null){
-		//console.log('[ibc-js] \t skip, already exists');					//skip
+function build_chaincode_func(name){
+	if(ibc.chaincode[name] != null){										//skip if already exists
+		//console.log('[ibc-js] \t skip, already exists');
 	}
 	else {
 		console.log('[ibc-js] Found cc function: ', name);
 		ibc.chaincode.details.func.push(name);
-		ibc.chaincode[name] = function(args, cb){							//create the functions in chaincode obj
+		ibc.chaincode[name] = function(args, cb){							//create the function in the chaincode obj
 			var options = {path: '/devops/invoke'};
 			var body = {
 					chaincodeSpec: {
@@ -717,7 +720,7 @@ function populate_go_chaincode(name){
 
 			options.success = function(statusCode, data){
 				console.log("[ibc-js]", name, " - success:", data);
-				ibc.q.push(Date.now());
+				ibc.q.push(Date.now());																//new action, add it to queue
 				if(cb) cb(null, data);
 			};
 			options.failure = function(statusCode, e){
@@ -730,9 +733,9 @@ function populate_go_chaincode(name){
 }
 
 //==================================================================
-//filter_users() - only get client level usernames - [1=client, 2=nvp, 4=vp, 8=auditor accurate as of 2/18]
+//filter_users() - return only client level usernames - [1=client, 2=nvp, 4=vp, 8=auditor accurate as of 2/18]
 //==================================================================
-function filter_users(users){
+function filter_users(users){											//this is only needed in a permissioned network
 	var valid_users = [];
 	for(var i = 0; i < users.length; i++) {
 		if(users[i].username.indexOf('user_type1') == 0){				//type should be 1 for client
@@ -745,11 +748,11 @@ function filter_users(users){
 //==================================================================
 //eFmt() - format errors
 //==================================================================
-function eFmt(name, code, details){
+function eFmt(name, code, details){										//my error format
 	return 	{
-		name: String(name),
-		code: Number(code),
-		details: details
+		name: String(name),												//error short name
+		code: Number(code),												//http code when applicable
+		details: details												//error description
 	};
 }
 
