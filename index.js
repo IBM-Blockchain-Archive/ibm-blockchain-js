@@ -22,23 +22,7 @@ var AdmZip = require('adm-zip');
 
 
 function ibc() {}
-ibc.chaincode = {
-					read: null,
-					query: null,
-					write: null,
-					remove: null,
-					deploy: null,
-					details:{
-								deployed_name: '',
-								func: [],
-								git_url: '',
-								peers: [],
-								users: [],
-								vars: [],
-								unzip_dir: '',
-								zip_url: '',
-					}
-				};
+ibc.chaincode = {};
 ibc.selectedPeer = 0;
 ibc.q = [];																			//array of unix timestamps, 1 for each unsettled action
 ibc.lastPoll = 0;																	//unix timestamp of the last time we polled
@@ -64,6 +48,24 @@ ibc.prototype.load = function(options, cb){
 		if(cb) cb(eFmt('input error', 400, errors));
 		return;																		//get out of dodge
 	}
+	
+	ibc.chaincode = {																//init it all
+					read: null,
+					query: null,
+					write: null,
+					remove: null,
+					deploy: null,
+					details:{
+								deployed_name: '',
+								func: [],
+								git_url: '',
+								peers: [],
+								users: [],
+								vars: [],
+								unzip_dir: '',
+								zip_url: '',
+					}
+				};
 	
 	// Step 1
 	ibc.prototype.network(options.network.peers);
@@ -697,7 +699,7 @@ ibc.prototype.monitor_blockheight = function(cb) {							//hook in your own func
 //==================================================================
 function build_chaincode_func(name){
 	if(ibc.chaincode[name] != null){										//skip if already exists
-		//console.log('[ibc-js] \t skip, already exists');
+		console.log('[ibc-js] \t skip, already exists');
 	}
 	else {
 		console.log('[ibc-js] Found cc function: ', name);
