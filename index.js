@@ -60,6 +60,7 @@ ibc.prototype.load = function(options, cb){
 								func: [],
 								git_url: '',
 								peers: [],
+								timestamp: 0,
 								users: [],
 								vars: [],
 								unzip_dir: '',
@@ -244,6 +245,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 					}
 
 					// Step 3.
+					ibc.chaincode.details.timestamp = Date.now();
 					ibc.chaincode.read = read;
 					ibc.chaincode.query = query;
 					ibc.chaincode.write = write;

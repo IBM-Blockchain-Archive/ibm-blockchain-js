@@ -331,18 +331,20 @@ It is returned in the callback to load_chaincode() and contains all your cc func
 			CUSTOM_FUNCTION_NAME2: function(args, cb){etc...};
 			CUSTOM_FUNCTION_NAME3: function(args, cb){etc...};
 			^^ etc...
-			read: function(name, cb),							//read variable
-			query: function(args, cb),							//^^
-			write: function(name, value, cb),					//write/create variable
-			remove: function(name, cb),							//delete variable
-			deploy: function(func, args, path, cb),				//deploy loaded chaincode
-			details:{											//input options get stored here, sometimes handy
-						deployed_name: '',
-						func: [],
-						unzip_dir: '',
+			read: function(name, cb),                   //read variable
+			query: function(args, cb),                  //^^
+			write: function(name, value, cb),           //write/create variable
+			remove: function(name, cb),	                //delete variable
+			deploy: function(func, args, path, cb),     //deploy loaded chaincode
+			details:{                                   //input options get stored here, sometimes handy
+						deployed_name: '',              //hash of deployed chaincode
+						func: [],                       //array of function names found
 						git_url: '',
-						peers: [],
-						vars: [],
+						peers: [],                      //peer list provided in network()
+						timestamp: 0,                   //unix timestamp in ms of parsing
+						users: [],                      //users provided in load()
+						vars: [],                       //tbd
+						unzip_dir: '',
 						zip_url: '',
 			}
 		};
