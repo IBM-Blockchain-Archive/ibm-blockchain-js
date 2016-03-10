@@ -144,7 +144,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 		catch(e){ }
 		fs.access(unzip_cc_dest, cb_file_exists);									//check if files exist yet
 		function cb_file_exists(e){
-			if(e !== null){
+			if(e != null){
 				download_it(options.zip_url);										//nope, go download it
 			}
 			else{
@@ -191,7 +191,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 	function cb_got_names(err, obj){
 		console.log('[ibc-js] Scanning files', obj);
 		var foundGo = false;
-		if(err !== null) console.log('! [ibc-js] fs readdir Error', err);
+		if(err != null) console.log('! [ibc-js] fs readdir Error', err);
 		else{
 			for(var i in obj){
 				if(obj[i].indexOf('.go') >= 0){										//look for GoLang files
@@ -211,7 +211,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 	
 	function cb_read_go_file(err, str){
 		var msg = '';
-		if(err !== null) console.log('! [ibc-js] fs readfile Error', err);
+		if(err != null) console.log('! [ibc-js] fs readfile Error', err);
 		else{
 			
 			// Step 2a.
@@ -368,7 +368,7 @@ ibc.prototype.clear =  function(cb){
 function removeThing(dir, cb){
 	//console.log('!', dir);
 	fs.readdir(dir, function (err, files) {
-		if(err !== null || !files || files.length === 0){
+		if(err != null || !files || files.length === 0){
 			cb();
 		}
 		else{
@@ -447,7 +447,12 @@ ibc.prototype.block_stats =  function(id, cb){
 //============================================================================================================================
 //read() - read generic variable from chaincode state
 //============================================================================================================================
-function read(name, cb){
+function read(name, username, cb){
+	if(typeof username === 'function' || (username == null && cb == null)) {
+		cb = username; 														//cb is in 2nd param OR null use known username
+		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
+	}
+	
 	var options = {
 		path: '/devops/query'
 	};
@@ -461,7 +466,7 @@ function read(name, cb){
 							function: 'query',
 							args: [name]
 						},
-						secureContext: ibc.chaincode.details.peers[ibc.selectedPeer].user
+						secureContext: username
 					}
 				};
 	//console.log('body', body);
@@ -479,7 +484,11 @@ function read(name, cb){
 //============================================================================================================================
 //query() - read generic variable from chaincode state
 //============================================================================================================================
-function query(args, cb){
+function query(args, username, cb){
+	if(typeof username === 'function' || (username == null && cb == null)) {
+		cb = username; 														//cb is in 2nd param OR null use known username
+		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
+	}
 	var options = {
 		path: '/devops/query'
 	};
@@ -493,7 +502,7 @@ function query(args, cb){
 							function: 'query',
 							args: args
 						},
-						secureContext: ibc.chaincode.details.peers[ibc.selectedPeer].user
+						secureContext: username
 					}
 				};
 	console.log('body', body);
@@ -511,7 +520,11 @@ function query(args, cb){
 //============================================================================================================================
 //write() - write generic variable to chaincode state
 //============================================================================================================================
-function write(name, val, cb){
+function write(name, val, username, cb){
+	if(typeof username === 'function' || (username == null && cb == null)) {
+		cb = username; 														//cb is in 2nd param OR null use known username
+		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
+	}
 	var options = {
 		path: '/devops/invoke'
 	};
@@ -525,7 +538,7 @@ function write(name, val, cb){
 							function: 'write',
 							args: [name, val]
 						},
-						secureContext: ibc.chaincode.details.peers[ibc.selectedPeer].user
+						secureContext: username
 					}
 				};
 	
@@ -544,7 +557,11 @@ function write(name, val, cb){
 //============================================================================================================================
 //remove() - delete a generic variable from chaincode state
 //============================================================================================================================
-function remove(name, cb){
+function remove(name, username, cb){
+	if(typeof username === 'function' || (username == null && cb == null)) {
+		cb = username; 														//cb is in 2nd param OR null use known username
+		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
+	}
 	var options = {
 		path: '/devops/invoke'
 	};
@@ -558,7 +575,7 @@ function remove(name, cb){
 							function: 'delete',
 							args: [name]
 						},
-						secureContext: ibc.chaincode.details.peers[ibc.selectedPeer].user
+						secureContext: username
 					}
 				};
 
@@ -608,7 +625,11 @@ ibc.prototype.register = function(index, enrollID, enrollSecret, cb) {
 //============================================================================================================================
 //deploy() - deploy chaincode and call a cc function
 //============================================================================================================================
-function deploy(func, args, save_path, cb){
+function deploy(func, args, save_path, username, cb){
+	if(typeof username === 'function' || (username == null && cb == null)) {
+		cb = username; 														//cb is in 2nd param OR null use known username
+		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
+	}
 	console.log('[ibc-js] Deploying Chaincode - Starting');
 	console.log('[ibc-js] \tfunction:', func, ', arg:', args);
 	console.log('\n\n\t Waiting...');										//this can take awhile
@@ -622,7 +643,7 @@ function deploy(func, args, save_path, cb){
 							'function': func,
 							'args': args
 					},
-					secureContext: ibc.chaincode.details.peers[ibc.selectedPeer].user
+					secureContext: username
 				};
 	//console.log('!body', body);
 	options.success = function(statusCode, data){
@@ -672,7 +693,7 @@ function heart_beat(){
 }
 
 function cb_got_stats(e, stats){
-	if(e === null){
+	if(e == null){
 		if(stats && stats.height){
 			if(ibc.lastBlock != stats.height) {								//this is a new block!
 				console.log('[ibc-js] New block!', stats.height);
@@ -700,13 +721,17 @@ ibc.prototype.monitor_blockheight = function(cb) {							//hook in your own func
 //build_chaincode_func() - create JS function that calls the custom goLang function in the chaincode
 //==================================================================
 function build_chaincode_func(name){
-	if(ibc.chaincode[name] !== null){										//skip if already exists
-		console.log('[ibc-js] \t skip, already exists');
+	if(ibc.chaincode[name] != null){												//skip if already exists
+		console.log('[ibc-js] \t skip, func', name, 'already exists');
 	}
 	else {
 		console.log('[ibc-js] Found cc function: ', name);
 		ibc.chaincode.details.func.push(name);
-		ibc.chaincode[name] = function(args, cb){							//create the function in the chaincode obj
+		ibc.chaincode[name] = function(args, username, cb){							//create the function in the chaincode obj
+			if(typeof username === 'function' || (username == null && cb == null)) {
+				cb = username; 														//cb is in 2nd param OR null use known username
+				username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
+			}
 			var options = {path: '/devops/invoke'};
 			var body = {
 					chaincodeSpec: {
@@ -718,17 +743,17 @@ function build_chaincode_func(name){
 							function: name,
 							args: args
 						},
-						secureContext: ibc.chaincode.details.peers[ibc.selectedPeer].user
+						secureContext: username
 					}
 			};
 
 			options.success = function(statusCode, data){
 				console.log('[ibc-js]', name, ' - success:', data);
-				ibc.q.push(Date.now());																//new action, add it to queue
+				ibc.q.push(Date.now());												//new action, add it to queue
 				if(cb) cb(null, data);
 			};
 			options.failure = function(statusCode, e){
-				console.log('[ibc-js]', name, ' - failure:', statusCode);
+				console.log('[ibc-js]', name, ' - failure:', statusCode, e);
 				if(cb) cb(eFmt('http error', statusCode, e), null);
 			};
 			rest.post(options, '', body);
