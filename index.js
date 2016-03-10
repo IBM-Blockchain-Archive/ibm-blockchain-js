@@ -610,7 +610,7 @@ ibc.prototype.register = function(index, enrollID, enrollSecret, cb) {
 
 	options.success = function(statusCode, data){
 		console.log('[ibc-js] Registration success:', enrollID);
-		ibc.chaincode.details.peers[index].user = enrollID;					//remember the user for this peer
+		ibc.chaincode.details.peers[index].user = enrollID;								//remember a valid user for this peer
 		if(cb){
 			cb(null, data);
 		}
@@ -627,12 +627,12 @@ ibc.prototype.register = function(index, enrollID, enrollSecret, cb) {
 //============================================================================================================================
 function deploy(func, args, save_path, username, cb){
 	if(typeof username === 'function' || (username == null && cb == null)) {
-		cb = username; 														//cb is in 2nd param OR null use known username
+		cb = username; 															//cb is in 2nd param OR null use known username
 		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
 	}
 	console.log('[ibc-js] Deploying Chaincode - Starting');
 	console.log('[ibc-js] \tfunction:', func, ', arg:', args);
-	console.log('\n\n\t Waiting...');										//this can take awhile
+	console.log('\n\n\t Waiting...');											//this can take awhile
 	var options = {path: '/devops/deploy'};
 	var body = 	{
 					type: 'GOLANG',
@@ -649,13 +649,13 @@ function deploy(func, args, save_path, username, cb){
 	options.success = function(statusCode, data){
 		console.log('\n\n\t deploy success [wait 1 more minute]');
 		ibc.chaincode.details.deployed_name = data.message;
-		ibc.prototype.save(tempDirectory);									//save it so we remember we have deployed
-		if(save_path != null) ibc.prototype.save(save_path);				//user wants the updated file somewhere
+		ibc.prototype.save(tempDirectory);										//save it so we remember we have deployed
+		if(save_path != null) ibc.prototype.save(save_path);					//user wants the updated file somewhere
 		if(cb){
 			setTimeout(function(){
 				console.log('[ibc-js] Deploying Chaincode - Complete');
 				cb(null, data);
-			}, 40000);														//wait extra long, not always ready yet
+			}, 40000);															//wait extra long, not always ready yet
 		}
 	};
 	options.failure = function(statusCode, e){
@@ -671,7 +671,7 @@ function deploy(func, args, save_path, username, cb){
 var slow_mode = 10000;
 var fast_mode = 500;
 function heart_beat(){
-	if(ibc.lastPoll + slow_mode < Date.now()){								//slow mode poll
+	if(ibc.lastPoll + slow_mode < Date.now()){									//slow mode poll
 		//console.log('[ibc-js] Its been awhile, time to poll');
 		ibc.lastPoll = Date.now();
 		ibc.prototype.chain_stats(cb_got_stats);
@@ -679,14 +679,14 @@ function heart_beat(){
 	else{
 		for(var i in ibc.q){
 			var elasped = Date.now() - ibc.q[i];
-			if(elasped <= 3000){											//fresh unresolved action, fast mode!
+			if(elasped <= 3000){												//fresh unresolved action, fast mode!
 				console.log('[ibc-js] Unresolved action, must poll');
 				ibc.lastPoll = Date.now();
 				ibc.prototype.chain_stats(cb_got_stats);
 			}
 			else{
 				//console.log('[ibc-js] Expired, removing');
-				ibc.q.pop();												//expired action, remove it
+				ibc.q.pop();													//expired action, remove it
 			}
 		}
 	}
@@ -695,11 +695,11 @@ function heart_beat(){
 function cb_got_stats(e, stats){
 	if(e == null){
 		if(stats && stats.height){
-			if(ibc.lastBlock != stats.height) {								//this is a new block!
+			if(ibc.lastBlock != stats.height) {									//this is a new block!
 				console.log('[ibc-js] New block!', stats.height);
 				ibc.lastBlock  = stats.height;
-				ibc.q.pop();												//action is resolved, remove
-				if(ibc.monitorFunction) ibc.monitorFunction(stats);			//call the user's callback
+				ibc.q.pop();													//action is resolved, remove
+				if(ibc.monitorFunction) ibc.monitorFunction(stats);				//call the user's callback
 			}
 		}
 	}
@@ -708,9 +708,9 @@ function cb_got_stats(e, stats){
 //============================================================================================================================
 // EXTERNAL- monitor_blockheight() - exposed function that user can use to get callback when any new block is written to the chain
 //============================================================================================================================
-ibc.prototype.monitor_blockheight = function(cb) {							//hook in your own function, triggers when chain grows
+ibc.prototype.monitor_blockheight = function(cb) {								//hook in your own function, triggers when chain grows
 	setInterval(function(){heart_beat();}, fast_mode);
-	ibc.monitorFunction = cb;												//store it
+	ibc.monitorFunction = cb;													//store it
 };
 
 
@@ -722,7 +722,7 @@ ibc.prototype.monitor_blockheight = function(cb) {							//hook in your own func
 //==================================================================
 function build_chaincode_func(name){
 	if(ibc.chaincode[name] != null){												//skip if already exists
-		console.log('[ibc-js] \t skip, func', name, 'already exists');
+		//console.log('[ibc-js] \t skip, func', name, 'already exists');
 	}
 	else {
 		console.log('[ibc-js] Found cc function: ', name);
@@ -764,10 +764,10 @@ function build_chaincode_func(name){
 //==================================================================
 //filter_users() - return only client level usernames - [1=client, 2=nvp, 4=vp, 8=auditor accurate as of 2/18]
 //==================================================================
-function filter_users(users){											//this is only needed in a permissioned network
+function filter_users(users){														//this is only needed in a permissioned network
 	var valid_users = [];
 	for(var i = 0; i < users.length; i++) {
-		if(users[i].username.indexOf('user_type1') === 0){				//type should be 1 for client
+		if(users[i].username.indexOf('user_type1') === 0){							//type should be 1 for client
 			valid_users.push(users[i]);
 		}
 	}
@@ -777,11 +777,11 @@ function filter_users(users){											//this is only needed in a permissioned 
 //==================================================================
 //eFmt() - format errors
 //==================================================================
-function eFmt(name, code, details){										//my error format
+function eFmt(name, code, details){													//my error format
 	return 	{
-		name: String(name),												//error short name
-		code: Number(code),												//http code when applicable
-		details: details												//error description
+		name: String(name),															//error short name
+		code: Number(code),															//http code when applicable
+		details: details															//error description
 	};
 }
 
