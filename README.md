@@ -291,30 +291,42 @@ Ex:
 - Chaincode functions are dependent on actually be found inside your Go chaincode
 - My advise is to build your chaincode off of the Marble Application one.  This way you get the basic CRUD functions below:
 
-### chaincode.read(name, [callback])
+### chaincode.read(name, [username], [callback])
 Read variable named name from chaincode state. 
 This will call the `Query()` function in the Go chaincode, therefore the `Query()` function needs to exists in the cc. 
 The variable name will be passed as `arg[0]` to `Query()`. 
+The `username` parameter should be the desired secure context username that has already been registered against the selected peer. 
+If left `null` the SDK will use a known username for the selected peer. (this is only relevant in a permissioned network)
 
-### chaincode.query(args, [callback])
+### chaincode.query(args, [username], [callback])
 This will call the query function with custom input arguments. 
 Usually "args" is an array of strings. 
+The `username` parameter should be the desired secure context username that has already been registered against the selected peer. 
+If left `null` the SDK will use a known username for the selected peer. (this is only relevant in a permissioned network)
 
-### chaincode.write(name, val, [callback])
+### chaincode.write(name, val, [username], [callback])
 Write 'val' to variable named 'name'. This will call the `write()` function in the Go chaincode, therefore the `write()` function needs to exists in the cc.
+The `username` parameter should be the desired secure context username that has already been registered against the selected peer. 
+If left `null` the SDK will use a known username for the selected peer. (this is only relevant in a permissioned network)
 
-### chaincode.remove(name, [callback])
+### chaincode.remove(name, [username], [callback])
 Delete variable named 'name'. This will call the `delete()` function in the Go chaincode, therefore the `delete()` function needs to exists in the cc.
+The `username` parameter should be the desired secure context username that has already been registered against the selected peer. 
+If left `null` the SDK will use a known username for the selected peer. (this is only relevant in a permissioned network)
 
-### chaincode.deploy(func, args, [save_path], [callback])
+### chaincode.deploy(func, args, [save_path], [username], [callback])
 Deploy the chaincode. 
 Call GoLang function named 'func' and feed it 'args'.
 Optionally save [Chaincode Summary File](#ccsf) to 'save_path'. 
 Usualy "args" is an array of strings.
+The `username` parameter should be the desired secure context username that has already been registered against the selected peer. 
+If left `null` the SDK will use a known username for the selected peer. (this is only relevant in a permissioned network)
 
-### chaincode.CUSTOM_FUNCTION_NAME(args, [callback])
+### chaincode.CUSTOM_FUNCTION_NAME(args, [username], [callback])
 Will invoke your Go function CUSTOM_FUNCTION_NAME and pass it 'arg'. 
 Usualy "args" is an array of strings.
+The `username` parameter should be the desired secure context username that has already been registered against the selected peer. 
+If left `null` the SDK will use a known username for the selected peer. (this is only relevant in a permissioned network)
 
 ***
 ***

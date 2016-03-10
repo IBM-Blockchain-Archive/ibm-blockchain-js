@@ -448,8 +448,11 @@ ibc.prototype.block_stats =  function(id, cb){
 //read() - read generic variable from chaincode state
 //============================================================================================================================
 function read(name, username, cb){
-	if(typeof username === 'function' || (username == null && cb == null)) {
-		cb = username; 														//cb is in 2nd param OR null use known username
+	if(typeof username === 'function'){ 									//if cb is in 2nd param use known username
+		cb = username;
+		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
+	}
+	if(username == null) {													//if username not provided, use known valid one
 		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
 	}
 	
@@ -485,10 +488,14 @@ function read(name, username, cb){
 //query() - read generic variable from chaincode state
 //============================================================================================================================
 function query(args, username, cb){
-	if(typeof username === 'function' || (username == null && cb == null)) {
-		cb = username; 														//cb is in 2nd param OR null use known username
+	if(typeof username === 'function'){ 									//if cb is in 2nd param use known username
+		cb = username;
 		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
 	}
+	if(username == null) {													//if username not provided, use known valid one
+		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
+	}
+	
 	var options = {
 		path: '/devops/query'
 	};
@@ -521,10 +528,14 @@ function query(args, username, cb){
 //write() - write generic variable to chaincode state
 //============================================================================================================================
 function write(name, val, username, cb){
-	if(typeof username === 'function' || (username == null && cb == null)) {
-		cb = username; 														//cb is in 2nd param OR null use known username
+	if(typeof username === 'function'){ 									//if cb is in 2nd param use known username
+		cb = username;
 		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
 	}
+	if(username == null) {													//if username not provided, use known valid one
+		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
+	}
+	
 	var options = {
 		path: '/devops/invoke'
 	};
@@ -558,10 +569,14 @@ function write(name, val, username, cb){
 //remove() - delete a generic variable from chaincode state
 //============================================================================================================================
 function remove(name, username, cb){
-	if(typeof username === 'function' || (username == null && cb == null)) {
-		cb = username; 														//cb is in 2nd param OR null use known username
+	if(typeof username === 'function'){ 									//if cb is in 2nd param use known username
+		cb = username;
 		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
 	}
+	if(username == null) {													//if username not provided, use known valid one
+		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
+	}
+	
 	var options = {
 		path: '/devops/invoke'
 	};
@@ -626,10 +641,14 @@ ibc.prototype.register = function(index, enrollID, enrollSecret, cb) {
 //deploy() - deploy chaincode and call a cc function
 //============================================================================================================================
 function deploy(func, args, save_path, username, cb){
-	if(typeof username === 'function' || (username == null && cb == null)) {
-		cb = username; 															//cb is in 2nd param OR null use known username
+	if(typeof username === 'function'){ 									//if cb is in 2nd param use known username
+		cb = username;
 		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
 	}
+	if(username == null) {													//if username not provided, use known valid one
+		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
+	}
+	
 	console.log('[ibc-js] Deploying Chaincode - Starting');
 	console.log('[ibc-js] \tfunction:', func, ', arg:', args);
 	console.log('\n\n\t Waiting...');											//this can take awhile
@@ -728,10 +747,14 @@ function build_chaincode_func(name){
 		console.log('[ibc-js] Found cc function: ', name);
 		ibc.chaincode.details.func.push(name);
 		ibc.chaincode[name] = function(args, username, cb){							//create the function in the chaincode obj
-			if(typeof username === 'function' || (username == null && cb == null)) {
-				cb = username; 														//cb is in 2nd param OR null use known username
+			if(typeof username === 'function'){ 									//if cb is in 2nd param use known username
+				cb = username;
 				username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
 			}
+			if(username == null) {													//if username not provided, use known valid one
+				username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
+			}
+	
 			var options = {path: '/devops/invoke'};
 			var body = {
 					chaincodeSpec: {
