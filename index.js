@@ -1,6 +1,5 @@
-"use strict";
+'use strict';
 /* global __dirname */
-/* global Buffer */
 /*******************************************************************************
  * Copyright (c) 2016 IBM Corp.
  *
@@ -17,7 +16,7 @@ var fs = require('fs');
 var path = require('path');
 var https = require('https');
 var async = require('async');
-var rest = require(__dirname + "/lib/rest");
+var rest = require(__dirname + '/lib/rest');
 var AdmZip = require('adm-zip');
 
 
@@ -27,7 +26,7 @@ ibc.selectedPeer = 0;
 ibc.q = [];																			//array of unix timestamps, 1 for each unsettled action
 ibc.lastPoll = 0;																	//unix timestamp of the last time we polled
 ibc.lastBlock = 0;																	//last blockheight found
-var tempDirectory = path.join(__dirname, "./temp");									//	=./temp - temp directory name
+var tempDirectory = path.join(__dirname, './temp');									//	=./temp - temp directory name
 
 
 // ============================================================================================================================
@@ -38,11 +37,11 @@ var tempDirectory = path.join(__dirname, "./temp");									//	=./temp - temp di
 // ============================================================================================================================
 ibc.prototype.load = function(options, cb){
 	var errors = [];
-	if(!options.network || !options.network.peers) errors.push("the option 'network.peers' is required");
+	if(!options.network || !options.network.peers) errors.push('the option "network.peers" is required');
 
-	if(!options.chaincode || !options.chaincode.zip_url) errors.push("the option 'chaincode.zip_url' is required");
-	if(!options.chaincode || !options.chaincode.unzip_dir) errors.push("the option 'chaincode.unzip_dir' is required");
-	if(!options.chaincode || !options.chaincode.git_url) errors.push("the option 'chaincode.git_url' is required");
+	if(!options.chaincode || !options.chaincode.zip_url) errors.push('the option "chaincode.zip_url" is required');
+	if(!options.chaincode || !options.chaincode.unzip_dir) errors.push('the option "chaincode.unzip_dir" is required');
+	if(!options.chaincode || !options.chaincode.git_url) errors.push('the option "chaincode.git_url" is required');
 	if(errors.length > 0){															//check for input errors
 		console.log('! [ibc-js] Input Error - ibc.load()', errors);
 		if(cb) cb(eFmt('input error', 400, errors));
@@ -114,9 +113,9 @@ ibc.prototype.load = function(options, cb){
 // ============================================================================================================================
 ibc.prototype.load_chaincode = function(options, cb) {
 	var errors = [];
-	if(!options.zip_url) errors.push("the option 'zip_url' is required");
-	if(!options.unzip_dir) errors.push("the option 'unzip_dir' is required");
-	if(!options.git_url) errors.push("the option 'git_url' is required");
+	if(!options.zip_url) errors.push('the option "zip_url" is required');
+	if(!options.unzip_dir) errors.push('the option "unzip_dir" is required');
+	if(!options.git_url) errors.push('the option "git_url" is required');
 	if(errors.length > 0){															//check for input errors
 		console.log('! [ibc-js] Input Error - ibc.load_chaincode()', errors);
 		if(cb) cb(eFmt('input error', 400, errors));
@@ -132,7 +131,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 	ibc.chaincode.details.git_url = options.git_url;
 	ibc.chaincode.details.deployed_name = options.deployed_name;
 
-	if(!options.deployed_name || options.deployed_name == ''){						//lets clear and re-download
+	if(!options.deployed_name || options.deployed_name === ''){						//lets clear and re-download
 		ibc.prototype.clear(cb_ready);
 	}
 	else{
@@ -145,7 +144,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 		catch(e){ }
 		fs.access(unzip_cc_dest, cb_file_exists);									//check if files exist yet
 		function cb_file_exists(e){
-			if(e != null){
+			if(e !== null){
 				download_it(options.zip_url);										//nope, go download it
 			}
 			else{
@@ -192,7 +191,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 	function cb_got_names(err, obj){
 		console.log('[ibc-js] Scanning files', obj);
 		var foundGo = false;
-		if(err != null) console.log('! [ibc-js] fs readdir Error', err);
+		if(err !== null) console.log('! [ibc-js] fs readdir Error', err);
 		else{
 			for(var i in obj){
 				if(obj[i].indexOf('.go') >= 0){										//look for GoLang files
@@ -212,7 +211,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 	
 	function cb_read_go_file(err, str){
 		var msg = '';
-		if(err != null) console.log('! [ibc-js] fs readfile Error', err);
+		if(err !== null) console.log('! [ibc-js] fs readfile Error', err);
 		else{
 			
 			// Step 2a.
@@ -227,9 +226,9 @@ ibc.prototype.load_chaincode = function(options, cb) {
 				keep_looking = false;
 				
 				// Step 2b.
-				var re = new RegExp('\\s' + res[1] + '\\.(\\w+)\\(', "gi");			//find the function names in Run()
+				var re = new RegExp('\\s' + res[1] + '\\.(\\w+)\\(', 'gi');			//find the function names in Run()
 				res = str.match(re);
-				if(!res || res.length == 0){
+				if(!res || res.length === 0){
 					msg = 'did not find GoLang functions in chaincode';
 					console.log('[ibc-js] Error - ', msg);
 					if(cb) cb(eFmt('no go functions', 400, msg), null);
@@ -263,14 +262,14 @@ ibc.prototype.load_chaincode = function(options, cb) {
 // ============================================================================================================================
 ibc.prototype.network = function(arrayPeers){
 	var errors = [];
-	if(!arrayPeers) errors.push("network input arg should be array of peer objects");
-	else if(arrayPeers.constructor !== Array) errors.push("network input arg should be array of peer objects");
+	if(!arrayPeers) errors.push('network input arg should be array of peer objects');
+	else if(arrayPeers.constructor !== Array) errors.push('network input arg should be array of peer objects');
 	
 	for(var i in arrayPeers){														//check for errors in peers
-		if(!arrayPeers[i].id) 		errors.push("peer " + i + " is missing the field id");
-		if(!arrayPeers[i].api_host) errors.push("peer " + i + " is missing the field api_host");
-		if(!arrayPeers[i].api_port) errors.push("peer " + i + " is missing the field api_port");
-		if(!arrayPeers[i].api_url)  errors.push("peer " + i + " is missing the field api_url");
+		if(!arrayPeers[i].id) 		errors.push('peer ' + i + ' is missing the field id');
+		if(!arrayPeers[i].api_host) errors.push('peer ' + i + ' is missing the field api_host');
+		if(!arrayPeers[i].api_port) errors.push('peer ' + i + ' is missing the field api_port');
+		if(!arrayPeers[i].api_url)  errors.push('peer ' + i + ' is missing the field api_url');
 	}
 	
 	if(errors.length > 0){															//check for input errors
@@ -297,8 +296,8 @@ ibc.prototype.network = function(arrayPeers){
 					host: ibc.chaincode.details.peers[0].api_host,
 					port: ibc.chaincode.details.peers[0].api_port,
 					headers: {
-								"Content-Type": "application/json",
-								"Accept": "application/json",
+								'Content-Type': 'application/json',
+								'Accept': 'application/json',
 							},
 					ssl: ibc.chaincode.details.peers[0].ssl,
 					timeout: 60000,
@@ -317,8 +316,8 @@ ibc.prototype.switchPeer = function(index) {
 					host: ibc.chaincode.details.peers[index].api_host,
 					port: ibc.chaincode.details.peers[index].api_port,
 					headers: {
-								"Content-Type": "application/json",
-								"Accept": "application/json",
+								'Content-Type': 'application/json',
+								'Accept': 'application/json',
 							},
 					ssl: ibc.chaincode.details.peers[index].ssl,
 					timeout: 60000,
@@ -336,7 +335,7 @@ ibc.prototype.switchPeer = function(index) {
 // ============================================================================================================================
 ibc.prototype.save =  function(dir, cb){
 	var errors = [];
-	if(!dir) errors.push("the option 'dir' is required");
+	if(!dir) errors.push('the option "dir" is required');
 	if(errors.length > 0){																//check for input errors
 		console.log('[ibc-js] Input Error - ibc.save()', errors);
 		if(cb) cb(eFmt('input error', 400, errors));
@@ -369,7 +368,7 @@ ibc.prototype.clear =  function(cb){
 function removeThing(dir, cb){
 	//console.log('!', dir);
 	fs.readdir(dir, function (err, files) {
-		if(err != null || !files || files.length == 0){
+		if(err !== null || !files || files.length === 0){
 			cb();
 		}
 		else{
@@ -418,11 +417,11 @@ ibc.prototype.chain_stats =  function(cb){
 	var options = {path: '/chain'};									//very simple API, get chainstats!
 
 	options.success = function(statusCode, data){
-		console.log("[ibc-js] Chain Stats - success");
+		console.log('[ibc-js] Chain Stats - success');
 		if(cb) cb(null, data);
 	};
 	options.failure = function(statusCode, e){
-		console.log("[ibc-js] Chain Stats - failure:", statusCode);
+		console.log('[ibc-js] Chain Stats - failure:', statusCode);
 		if(cb) cb(eFmt('http error', statusCode, e), null);
 	};
 	rest.get(options, '');
@@ -434,11 +433,11 @@ ibc.prototype.chain_stats =  function(cb){
 ibc.prototype.block_stats =  function(id, cb){
 	var options = {path: '/chain/blocks/' + id};					//i think block IDs start at 0, height starts at 1, fyi
 	options.success = function(statusCode, data){
-		console.log("[ibc-js] Block Stats - success");
+		console.log('[ibc-js] Block Stats - success');
 		if(cb) cb(null, data);
 	};
 	options.failure = function(statusCode, e){
-		console.log("[ibc-js] Block Stats - failure:", statusCode);
+		console.log('[ibc-js] Block Stats - failure:', statusCode);
 		if(cb) cb(eFmt('http error', statusCode, e), null);
 	};
 	rest.get(options, '');
@@ -454,12 +453,12 @@ function read(name, cb){
 	};
 	var body = {
 					chaincodeSpec: {
-						type: "GOLANG",
+						type: 'GOLANG',
 						chaincodeID: {
 							name: ibc.chaincode.details.deployed_name,
 						},
 						ctorMsg: {
-							function: "query",
+							function: 'query',
 							args: [name]
 						},
 						secureContext: ibc.chaincode.details.peers[ibc.selectedPeer].user
@@ -467,11 +466,11 @@ function read(name, cb){
 				};
 	//console.log('body', body);
 	options.success = function(statusCode, data){
-		console.log("[ibc-js] Read - success:", data);
+		console.log('[ibc-js] Read - success:', data);
 		if(cb) cb(null, data.OK);
 	};
 	options.failure = function(statusCode, e){
-		console.log("[ibc-js] Read - failure:", statusCode);
+		console.log('[ibc-js] Read - failure:', statusCode);
 		if(cb) cb(eFmt('http error', statusCode, e), null);
 	};
 	rest.post(options, '', body);
@@ -486,12 +485,12 @@ function query(args, cb){
 	};
 	var body = {
 					chaincodeSpec: {
-						type: "GOLANG",
+						type: 'GOLANG',
 						chaincodeID: {
 							name: ibc.chaincode.details.deployed_name,
 						},
 						ctorMsg: {
-							function: "query",
+							function: 'query',
 							args: args
 						},
 						secureContext: ibc.chaincode.details.peers[ibc.selectedPeer].user
@@ -499,11 +498,11 @@ function query(args, cb){
 				};
 	console.log('body', body);
 	options.success = function(statusCode, data){
-		console.log("[ibc-js] Query - success:", data);
+		console.log('[ibc-js] Query - success:', data);
 		if(cb) cb(null, data.OK);
 	};
 	options.failure = function(statusCode, e){
-		console.log("[ibc-js] Query - failure:", statusCode);
+		console.log('[ibc-js] Query - failure:', statusCode);
 		if(cb) cb(eFmt('http error', statusCode, e), null);
 	};
 	rest.post(options, '', body);
@@ -518,7 +517,7 @@ function write(name, val, cb){
 	};
 	var body = {
 					chaincodeSpec: {
-						type: "GOLANG",
+						type: 'GOLANG',
 						chaincodeID: {
 							name: ibc.chaincode.details.deployed_name,
 						},
@@ -531,12 +530,12 @@ function write(name, val, cb){
 				};
 	
 	options.success = function(statusCode, data){
-		console.log("[ibc-js] Write - success:", data);
+		console.log('[ibc-js] Write - success:', data);
 		ibc.q.push(Date.now());																//new action, add it to queue
 		if(cb) cb(null, data);
 	};
 	options.failure = function(statusCode, e){
-		console.log("[ibc-js] Write - failure:", statusCode);
+		console.log('[ibc-js] Write - failure:', statusCode);
 		if(cb) cb(eFmt('http error', statusCode, e), null);
 	};
 	rest.post(options, '', body);
@@ -551,7 +550,7 @@ function remove(name, cb){
 	};
 	var body = {
 					chaincodeSpec: {
-						type: "GOLANG",
+						type: 'GOLANG',
 						chaincodeID: {
 							name: ibc.chaincode.details.deployed_name,
 						},
@@ -564,12 +563,12 @@ function remove(name, cb){
 				};
 
 	options.success = function(statusCode, data){
-		console.log("[ibc-js] Remove - success:", data);
+		console.log('[ibc-js] Remove - success:', data);
 		ibc.q.push(Date.now());																//new action, add it to queue
 		if(cb) cb(null, data);
 	};
 	options.failure = function(statusCode, e){
-		console.log("[ibc-js] Remove - failure:", statusCode);
+		console.log('[ibc-js] Remove - failure:', statusCode);
 		if(cb) cb(eFmt('http error', statusCode, e), null);
 	};
 	rest.post(options, '', body);
@@ -579,7 +578,7 @@ function remove(name, cb){
 // EXTERNAL - register() - register a username with a peer (only for a secured blockchain network)
 //============================================================================================================================
 ibc.prototype.register = function(index, enrollID, enrollSecret, cb) {
-	console.log("[ibc-js] Registering ", ibc.chaincode.details.peers[index].name, " w/enrollID - " + enrollID);
+	console.log('[ibc-js] Registering ', ibc.chaincode.details.peers[index].name, ' w/enrollID - ' + enrollID);
 	var options = {
 		path: '/registrar',
 		host: ibc.chaincode.details.peers[index].api_host,
@@ -593,14 +592,14 @@ ibc.prototype.register = function(index, enrollID, enrollSecret, cb) {
 				};
 
 	options.success = function(statusCode, data){
-		console.log("[ibc-js] Registration success:", enrollID);
+		console.log('[ibc-js] Registration success:', enrollID);
 		ibc.chaincode.details.peers[index].user = enrollID;					//remember the user for this peer
 		if(cb){
 			cb(null, data);
 		}
 	};
 	options.failure = function(statusCode, e){
-		console.log("[ibc-js] Register - failure:", enrollID, statusCode);
+		console.log('[ibc-js] Register - failure:', enrollID, statusCode);
 		if(cb) cb(eFmt('http error', statusCode, e), null);
 	};
 	rest.post(options, '', body);
@@ -610,35 +609,36 @@ ibc.prototype.register = function(index, enrollID, enrollSecret, cb) {
 //deploy() - deploy chaincode and call a cc function
 //============================================================================================================================
 function deploy(func, args, save_path, cb){
-	console.log("[ibc-js] Deploying Chaincode - Start");
-	console.log("\n\n\t Waiting...");										//this can take awhile
+	console.log('[ibc-js] Deploying Chaincode - Starting');
+	console.log('[ibc-js] \tfunction:', func, ', arg:', args);
+	console.log('\n\n\t Waiting...');										//this can take awhile
 	var options = {path: '/devops/deploy'};
 	var body = 	{
-					type: "GOLANG",
+					type: 'GOLANG',
 					chaincodeID: {
 							path: ibc.chaincode.details.git_url
 						},
 					ctorMsg:{
-							"function": func,
-							"args": args
+							'function': func,
+							'args': args
 					},
 					secureContext: ibc.chaincode.details.peers[ibc.selectedPeer].user
 				};
 	//console.log('!body', body);
 	options.success = function(statusCode, data){
-		console.log("\n\n\t deploy success [wait 1 more minute]");
+		console.log('\n\n\t deploy success [wait 1 more minute]');
 		ibc.chaincode.details.deployed_name = data.message;
 		ibc.prototype.save(tempDirectory);									//save it so we remember we have deployed
 		if(save_path != null) ibc.prototype.save(save_path);				//user wants the updated file somewhere
 		if(cb){
 			setTimeout(function(){
-				console.log("[ibc-js] Deploying Chaincode - Complete");
+				console.log('[ibc-js] Deploying Chaincode - Complete');
 				cb(null, data);
 			}, 40000);														//wait extra long, not always ready yet
 		}
 	};
 	options.failure = function(statusCode, e){
-		console.log("[ibc-js] deploy - failure:", statusCode);
+		console.log('[ibc-js] deploy - failure:', statusCode);
 		if(cb) cb(eFmt('http error', statusCode, e), null);
 	};
 	rest.post(options, '', body);
@@ -672,7 +672,7 @@ function heart_beat(){
 }
 
 function cb_got_stats(e, stats){
-	if(e == null){
+	if(e === null){
 		if(stats && stats.height){
 			if(ibc.lastBlock != stats.height) {								//this is a new block!
 				console.log('[ibc-js] New block!', stats.height);
@@ -700,7 +700,7 @@ ibc.prototype.monitor_blockheight = function(cb) {							//hook in your own func
 //build_chaincode_func() - create JS function that calls the custom goLang function in the chaincode
 //==================================================================
 function build_chaincode_func(name){
-	if(ibc.chaincode[name] != null){										//skip if already exists
+	if(ibc.chaincode[name] !== null){										//skip if already exists
 		console.log('[ibc-js] \t skip, already exists');
 	}
 	else {
@@ -710,7 +710,7 @@ function build_chaincode_func(name){
 			var options = {path: '/devops/invoke'};
 			var body = {
 					chaincodeSpec: {
-						type: "GOLANG",
+						type: 'GOLANG',
 						chaincodeID: {
 							name: ibc.chaincode.details.deployed_name,
 						},
@@ -723,12 +723,12 @@ function build_chaincode_func(name){
 			};
 
 			options.success = function(statusCode, data){
-				console.log("[ibc-js]", name, " - success:", data);
+				console.log('[ibc-js]', name, ' - success:', data);
 				ibc.q.push(Date.now());																//new action, add it to queue
 				if(cb) cb(null, data);
 			};
 			options.failure = function(statusCode, e){
-				console.log("[ibc-js]", name, " - failure:", statusCode);
+				console.log('[ibc-js]', name, ' - failure:', statusCode);
 				if(cb) cb(eFmt('http error', statusCode, e), null);
 			};
 			rest.post(options, '', body);
@@ -742,7 +742,7 @@ function build_chaincode_func(name){
 function filter_users(users){											//this is only needed in a permissioned network
 	var valid_users = [];
 	for(var i = 0; i < users.length; i++) {
-		if(users[i].username.indexOf('user_type1') == 0){				//type should be 1 for client
+		if(users[i].username.indexOf('user_type1') === 0){				//type should be 1 for client
 			valid_users.push(users[i]);
 		}
 	}
