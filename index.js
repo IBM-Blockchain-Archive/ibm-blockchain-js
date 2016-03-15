@@ -3,7 +3,7 @@
 /*******************************************************************************
  * Copyright (c) 2016 IBM Corp.
  *
- * All rights reserved. 
+ * All rights reserved.
  *
  *******************************************************************************/
 /*
@@ -21,7 +21,24 @@ var AdmZip = require('adm-zip');
 
 
 function ibc() {}
-ibc.chaincode = {};
+ibc.chaincode = {																//init it all
+	read: null,
+	query: null,
+	write: null,
+	remove: null,
+	deploy: null,
+	details:{
+		deployed_name: '',
+		func: [],
+		git_url: '',
+		peers: [],
+		timestamp: 0,
+		users: [],
+		vars: [],
+		unzip_dir: '',
+		zip_url: ''
+	}
+};
 ibc.selectedPeer = 0;
 ibc.q = [];																			//array of unix timestamps, 1 for each unsettled action
 ibc.lastPoll = 0;																	//unix timestamp of the last time we polled
@@ -47,7 +64,7 @@ ibc.prototype.load = function(options, cb){
 		if(cb) cb(eFmt('input error', 400, errors));
 		return;																		//get out of dodge
 	}
-	
+
 	ibc.chaincode = {																//init it all
 					read: null,
 					query: null,
@@ -63,13 +80,13 @@ ibc.prototype.load = function(options, cb){
 								users: [],
 								vars: [],
 								unzip_dir: '',
-								zip_url: '',
+								zip_url: ''
 					}
 				};
-	
+
 	// Step 1
 	ibc.prototype.network(options.network.peers);
-	
+
 	// Step 2 - optional - only for secure networks
 	if(options.network.users){
 		options.network.users = filter_users(options.network.users);				//only use the appropriate IDs filter out the rest
@@ -94,7 +111,7 @@ ibc.prototype.load = function(options, cb){
 		console.log('[ibc-js] No membership users found after filtering, assuming this is a network w/o membership');
 		load_cc();
 	}
-	
+
 	// Step 3
 	function load_cc(){
 		ibc.prototype.load_chaincode(options.chaincode, cb);						//download/parse and load chaincode
@@ -121,7 +138,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 		if(cb) cb(eFmt('input error', 400, errors));
 		return;																		//get out of dodge
 	}
-	
+
 	var keep_looking = true;
 	var zip_dest = path.join(tempDirectory,  '/file.zip');							//	=./temp/file.zip
 	var unzip_dest = path.join(tempDirectory,  '/unzip');							//	=./temp/unzip
@@ -137,7 +154,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 	else{
 		cb_ready();
 	}
-	
+
 	// check if we already have the chaincode in the local filesystem, else download it
 	function cb_ready(){
 		try{fs.mkdirSync(tempDirectory);}
@@ -176,7 +193,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 			if (cb) cb(eFmt('fs error', 500, err.message), ibc.chaincode);
 		});
 	}
-	
+
 	// Step 1.
 	function cb_downloaded(){
 		console.log('[ibc-js] Unzipping zip');
@@ -208,12 +225,12 @@ ibc.prototype.load_chaincode = function(options, cb) {
 			if(cb) cb(eFmt('no chaincode', 400, msg), null);
 		}
 	}
-	
+
 	function cb_read_go_file(err, str){
 		var msg = '';
 		if(err != null) console.log('! [ibc-js] fs readfile Error', err);
 		else{
-			
+
 			// Step 2a.
 			var regex = /func\s+\((\w+)\s+\*SimpleChaincode\)\s+Run/i;				//find the variable name that Run is using for simplechaincode pointer
 			var res = str.match(regex);
@@ -224,7 +241,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 			}
 			else{
 				keep_looking = false;
-				
+
 				// Step 2b.
 				var re = new RegExp('\\s' + res[1] + '\\.(\\w+)\\(', 'gi');			//find the function names in Run()
 				res = str.match(re);
@@ -234,7 +251,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 					if(cb) cb(eFmt('no go functions', 400, msg), null);
 				}
 				else{
-					
+
 					// Step 2c.
 					ibc.chaincode.details.func = [];
 					for(var i in res){												//build the rest call for each function
@@ -264,14 +281,14 @@ ibc.prototype.network = function(arrayPeers){
 	var errors = [];
 	if(!arrayPeers) errors.push('network input arg should be array of peer objects');
 	else if(arrayPeers.constructor !== Array) errors.push('network input arg should be array of peer objects');
-	
+
 	for(var i in arrayPeers){														//check for errors in peers
 		if(!arrayPeers[i].id) 		errors.push('peer ' + i + ' is missing the field id');
 		if(!arrayPeers[i].api_host) errors.push('peer ' + i + ' is missing the field api_host');
 		if(!arrayPeers[i].api_port) errors.push('peer ' + i + ' is missing the field api_port');
 		if(!arrayPeers[i].api_url)  errors.push('peer ' + i + ' is missing the field api_url');
 	}
-	
+
 	if(errors.length > 0){															//check for input errors
 		console.log('! [ibc-js] Input Error - ibc.network()', errors);
 	}
@@ -455,7 +472,7 @@ function read(name, username, cb){
 	if(username == null) {													//if username not provided, use known valid one
 		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
 	}
-	
+
 	var options = {
 		path: '/devops/query'
 	};
@@ -495,7 +512,7 @@ function query(args, username, cb){
 	if(username == null) {													//if username not provided, use known valid one
 		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
 	}
-	
+
 	var options = {
 		path: '/devops/query'
 	};
@@ -535,7 +552,7 @@ function write(name, val, username, cb){
 	if(username == null) {													//if username not provided, use known valid one
 		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
 	}
-	
+
 	var options = {
 		path: '/devops/invoke'
 	};
@@ -552,7 +569,7 @@ function write(name, val, username, cb){
 						secureContext: username
 					}
 				};
-	
+
 	options.success = function(statusCode, data){
 		console.log('[ibc-js] Write - success:', data);
 		ibc.q.push(Date.now());																//new action, add it to queue
@@ -576,7 +593,7 @@ function remove(name, username, cb){
 	if(username == null) {													//if username not provided, use known valid one
 		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
 	}
-	
+
 	var options = {
 		path: '/devops/invoke'
 	};
@@ -648,7 +665,7 @@ function deploy(func, args, save_path, username, cb){
 	if(username == null) {													//if username not provided, use known valid one
 		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
 	}
-	
+
 	console.log('[ibc-js] Deploying Chaincode - Starting');
 	console.log('[ibc-js] \tfunction:', func, ', arg:', args);
 	console.log('\n\n\t Waiting...');											//this can take awhile
@@ -754,7 +771,7 @@ function build_chaincode_func(name){
 			if(username == null) {													//if username not provided, use known valid one
 				username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
 			}
-	
+
 			var options = {path: '/devops/invoke'};
 			var body = {
 					chaincodeSpec: {
