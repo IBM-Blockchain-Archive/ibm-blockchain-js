@@ -7,8 +7,7 @@
  *
  *******************************************************************************/
 /*
-	Version: 0.0.7
-	Updated: 03/03/2016
+	Updated: 03/15/2016
 */
 
 //Load modules
@@ -21,7 +20,7 @@ var AdmZip = require('adm-zip');
 
 
 function ibc() {}
-ibc.chaincode = {																//init it all
+ibc.chaincode = {																	//init it all
 	read: null,
 	query: null,
 	write: null,
@@ -34,7 +33,6 @@ ibc.chaincode = {																//init it all
 		peers: [],
 		timestamp: 0,
 		users: [],
-		vars: [],
 		unzip_dir: '',
 		zip_url: ''
 	}
@@ -65,7 +63,7 @@ ibc.prototype.load = function(options, cb){
 		return;																		//get out of dodge
 	}
 
-	ibc.chaincode = {																//init it all
+	ibc.chaincode = {																//empty it all
 					read: null,
 					query: null,
 					write: null,
@@ -78,7 +76,6 @@ ibc.prototype.load = function(options, cb){
 								peers: [],
 								timestamp: 0,
 								users: [],
-								vars: [],
 								unzip_dir: '',
 								zip_url: ''
 					}
