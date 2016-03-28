@@ -82,7 +82,7 @@ ibc.prototype.load = function(options, cb){
 				};
 
 	// Step 1
-	ibc.prototype.network(options.network.peers);
+	ibc.prototype.network(options.network.peers, options.network.options);
 
 	// Step 2 - optional - only for secure networks
 	if(options.network.users){
@@ -283,18 +283,18 @@ ibc.prototype.network = function(arrayPeers, options){
 	else if(arrayPeers.constructor !== Array) errors.push('network input arg should be array of peer objects');
 	
 	if(options){
-		if(options.quiet) quiet = options.quiet;									//optional field
-		if(options.timeout) timeout = options.timeout;
+		if(options.quiet === true || options.quiet === false) quiet = options.quiet;	//optional fields
+		if(Number(options.timeout)) timeout = options.timeout;
 	}
-
-	for(var i in arrayPeers){														//check for errors in peers
+	
+	for(var i in arrayPeers){															//check for errors in peers
 		if(!arrayPeers[i].id) 		errors.push('peer ' + i + ' is missing the field id');
 		if(!arrayPeers[i].api_host) errors.push('peer ' + i + ' is missing the field api_host');
 		if(!arrayPeers[i].api_port) errors.push('peer ' + i + ' is missing the field api_port');
 		if(!arrayPeers[i].api_url)  errors.push('peer ' + i + ' is missing the field api_url');
 	}
 
-	if(errors.length > 0){															//check for input errors
+	if(errors.length > 0){																//check for input errors
 		console.log('! [ibc-js] Input Error - ibc.network()', errors);
 	}
 	else{
@@ -314,7 +314,7 @@ ibc.prototype.network = function(arrayPeers, options){
 			ibc.chaincode.details.peers.push(temp);
 		}
 
-		rest.init({																	//load default values for rest call to peer
+		rest.init({																		//load default values for rest call to peer
 					host: ibc.chaincode.details.peers[0].api_host,
 					port: ibc.chaincode.details.peers[0].api_port,
 					headers: {
@@ -368,7 +368,7 @@ ibc.prototype.save =  function(dir, cb){
 		var dest = path.join(dir, fn);
 		fs.writeFile(dest, JSON.stringify({details: ibc.chaincode.details}), function(e){
 			if(e != null){
-				console.log(e);
+				console.log('[ibc-js] ibc.save() error', e);
 				if(cb) cb(eFmt('save() fs write error', 500, e), null);
 			}
 			else {
