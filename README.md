@@ -62,7 +62,11 @@ npm install ibm-blockchain-js
 			users:  [{
 				"username": "user1",
 				"secret": "xxxxxxxx"
-			}]
+			}],
+			options: {							//this is optional
+				quiet: true, 
+				timeout: 60000
+			}
 		},
 		chaincode:{
 			zip_url: 'https://github.com/ibm-blockchain/marbles-chaincode/archive/master.zip',
@@ -128,7 +132,11 @@ Options Parameter:
 			users:  [{
 				"username": "user1",
 				"secret": "xxxxxxxx"
-			}]
+			}],
+			options: {						//this is optional
+				quiet: true, 
+				timeout: 60000
+			}
 		},
 		chaincode:{
 			zip_url: 'https://github.com/ibm-blockchain/marbles-chaincode/archive/master.zip', //http/https of a link to download zip
@@ -160,9 +168,12 @@ Example
 	ibc.load_chaincode(options, cb_ready);
 ```
 
-### ibc.network(arrayPeers)
+### ibc.network(arrayPeers, [options])
 Set the information about the peers in the network.
 This should be an array of peer objects. 
+The optional options parameter should be an object with the field `quiet` and/or `timeout`.
+- quiet = boolean - when true will print out only minimal HTTP debug information. Default `true`.
+- timeout = integer - time in ms to wait for a response. Default `60000`.
 
 Ex:
 
@@ -175,7 +186,7 @@ Ex:
 			"api_url": "http://xxx.xxx.xxx.xxx:xxxxx"
 		}
 	]
-	ibc.network(peers);
+	ibc.network(peers, {quiet: false, timeout: 120000});
 ```
 
 ### ibc.save(path [callback])
