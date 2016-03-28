@@ -8,9 +8,6 @@ var Ibc1 = require('ibm-blockchain-js');
 var ibc = new Ibc1();
 var chaincode = {};
 
-// Define the cb_ready (call back when ready) function
-var cb_ready = function cb_ready(err, cc) {};
-
 // Define options for ibc.load_chancode
 // In this case, this is just defining where to get the blockchain code
 var options = {
@@ -22,12 +19,9 @@ var options = {
 
 // Call the actual function of interest
 // ibc.load_chaincode inputs options just spcified, outputs callbackready function
-ibc.load_chaincode(options, cb_ready);
-
-// Write a test to check if the load function was successful
-test('Was the load_chaincode sucessful', function (t) {
-	var actual = err;
-	var expected = '';
-	t.equal(actual, expected, 'should pass if there are no errors');
-	t.end();
- });
+ibc.load_chaincode(options, function cb_ready(err, cc) {
+	test('Was the load_chaincode sucessful', function (t) {
+		t.error(err, 'There were no errors');
+		t.end();
+	}); //end test
+});  //end load chaincode
