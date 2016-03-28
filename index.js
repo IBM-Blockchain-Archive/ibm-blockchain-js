@@ -59,7 +59,7 @@ ibc.prototype.load = function(options, cb){
 	if(!options.chaincode || !options.chaincode.git_url) errors.push('the option "chaincode.git_url" is required');
 	if(errors.length > 0){															//check for input errors
 		console.log('! [ibc-js] Input Error - ibc.load()', errors);
-		if(cb) cb(eFmt('input error', 400, errors));
+		if(cb) cb(eFmt('load() input error', 400, errors));
 		return;																		//get out of dodge
 	}
 
@@ -100,7 +100,8 @@ ibc.prototype.load = function(options, cb){
 			}
 			else a_cb();
 		}, function(err, data){
-			load_cc();
+			if(err && cb) return cb(err);													//error already formated
+			else load_cc();
 		});
 	}
 	else{
@@ -132,7 +133,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 	if(!options.git_url) errors.push('the option "git_url" is required');
 	if(errors.length > 0){															//check for input errors
 		console.log('! [ibc-js] Input Error - ibc.load_chaincode()', errors);
-		if(cb) cb(eFmt('input error', 400, errors));
+		if(cb) cb(eFmt('load_chaincode() input error', 400, errors));
 		return;																		//get out of dodge
 	}
 
@@ -187,7 +188,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 		}).on('error', function(err) {
 			console.log('! [ibc-js] Download error');
 			fs.unlink(zip_dest); 													//delete the file async
-			if (cb) cb(eFmt('fs error', 500, err.message), ibc.chaincode);
+			if (cb) cb(eFmt('doad_chaincode() download error', 500, err.message), ibc.chaincode);
 		});
 	}
 
@@ -219,7 +220,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 		if(!foundGo){																//error
 			var msg = 'did not find any *.go files, cannot continue';
 			console.log('! [ibc-js] Error - ', msg);
-			if(cb) cb(eFmt('no chaincode', 400, msg), null);
+			if(cb) cb(eFmt('load_chaincode() no chaincode', 400, msg), null);
 		}
 	}
 
@@ -234,7 +235,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 			if(!res || !res[1]){
 				msg = 'did not find Run() function in chaincode, cannot continue';
 				console.log('! [ibc-js] Error -', msg);
-				if(cb) cb(eFmt('missing run', 400, msg), null);
+				if(cb) cb(eFmt('load_chaincode() missing Run()', 400, msg), null);
 			}
 			else{
 				keep_looking = false;
@@ -245,7 +246,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 				if(!res || res.length === 0){
 					msg = 'did not find GoLang functions in chaincode';
 					console.log('[ibc-js] Error - ', msg);
-					if(cb) cb(eFmt('no go functions', 400, msg), null);
+					if(cb) cb(eFmt('load_chaincode() no go functions', 400, msg), null);
 				}
 				else{
 
@@ -291,7 +292,7 @@ ibc.prototype.network = function(arrayPeers){
 	}
 	else{
 		ibc.chaincode.details.peers = [];
-		for(var i in arrayPeers){
+		for(i in arrayPeers){
 			var pos = arrayPeers[i].id.indexOf('_') + 1;
 			var temp = 	{
 							name: '',
@@ -352,7 +353,7 @@ ibc.prototype.save =  function(dir, cb){
 	if(!dir) errors.push('the option "dir" is required');
 	if(errors.length > 0){																//check for input errors
 		console.log('[ibc-js] Input Error - ibc.save()', errors);
-		if(cb) cb(eFmt('input error', 400, errors));
+		if(cb) cb(eFmt('save() input error', 400, errors));
 	}
 	else{
 		var fn = 'chaincode.json';														//default name
@@ -361,7 +362,7 @@ ibc.prototype.save =  function(dir, cb){
 		fs.writeFile(dest, JSON.stringify({details: ibc.chaincode.details}), function(e){
 			if(e != null){
 				console.log(e);
-				if(cb) cb(eFmt('fs write error', 500, e), null);
+				if(cb) cb(eFmt('save() fs write error', 500, e), null);
 			}
 			else {
 				//console.log(' - saved ', dest);
@@ -436,7 +437,7 @@ ibc.prototype.chain_stats =  function(cb){
 	};
 	options.failure = function(statusCode, e){
 		console.log('[ibc-js] Chain Stats - failure:', statusCode);
-		if(cb) cb(eFmt('http error', statusCode, e), null);
+		if(cb) cb(eFmt('chain_stats() error', statusCode, e), null);
 	};
 	rest.get(options, '');
 };
@@ -452,7 +453,7 @@ ibc.prototype.block_stats =  function(id, cb){
 	};
 	options.failure = function(statusCode, e){
 		console.log('[ibc-js] Block Stats - failure:', statusCode);
-		if(cb) cb(eFmt('http error', statusCode, e), null);
+		if(cb) cb(eFmt('block_stats() error', statusCode, e), null);
 	};
 	rest.get(options, '');
 };
@@ -493,7 +494,7 @@ function read(name, username, cb){
 	};
 	options.failure = function(statusCode, e){
 		console.log('[ibc-js] Read - failure:', statusCode);
-		if(cb) cb(eFmt('http error', statusCode, e), null);
+		if(cb) cb(eFmt('read() error', statusCode, e), null);
 	};
 	rest.post(options, '', body);
 }
@@ -533,7 +534,7 @@ function query(args, username, cb){
 	};
 	options.failure = function(statusCode, e){
 		console.log('[ibc-js] Query - failure:', statusCode);
-		if(cb) cb(eFmt('http error', statusCode, e), null);
+		if(cb) cb(eFmt('query() error', statusCode, e), null);
 	};
 	rest.post(options, '', body);
 }
@@ -574,7 +575,7 @@ function write(name, val, username, cb){
 	};
 	options.failure = function(statusCode, e){
 		console.log('[ibc-js] Write - failure:', statusCode);
-		if(cb) cb(eFmt('http error', statusCode, e), null);
+		if(cb) cb(eFmt('write() error', statusCode, e), null);
 	};
 	rest.post(options, '', body);
 }
@@ -615,7 +616,7 @@ function remove(name, username, cb){
 	};
 	options.failure = function(statusCode, e){
 		console.log('[ibc-js] Remove - failure:', statusCode);
-		if(cb) cb(eFmt('http error', statusCode, e), null);
+		if(cb) cb(eFmt('remove() error', statusCode, e), null);
 	};
 	rest.post(options, '', body);
 }
@@ -646,7 +647,7 @@ ibc.prototype.register = function(index, enrollID, enrollSecret, cb) {
 	};
 	options.failure = function(statusCode, e){
 		console.log('[ibc-js] Register - failure:', enrollID, statusCode);
-		if(cb) cb(eFmt('http error', statusCode, e), null);
+		if(cb) cb(eFmt('register() error', statusCode, e), null);
 	};
 	rest.post(options, '', body);
 };
@@ -693,7 +694,7 @@ function deploy(func, args, save_path, username, cb){
 	};
 	options.failure = function(statusCode, e){
 		console.log('[ibc-js] deploy - failure:', statusCode);
-		if(cb) cb(eFmt('http error', statusCode, e), null);
+		if(cb) cb(eFmt('deploy() error', statusCode, e), null);
 	};
 	rest.post(options, '', body);
 }
@@ -791,7 +792,7 @@ function build_chaincode_func(name){
 			};
 			options.failure = function(statusCode, e){
 				console.log('[ibc-js]', name, ' - failure:', statusCode, e);
-				if(cb) cb(eFmt('http error', statusCode, e), null);
+				if(cb) cb(eFmt('invoke() error', statusCode, e), null);
 			};
 			rest.post(options, '', body);
 		};
