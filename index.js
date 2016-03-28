@@ -255,7 +255,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 					for(var i in res){												//build the rest call for each function
 						var pos = res[i].indexOf('.');
 						var temp = res[i].substring(pos + 1, res[i].length - 1);
-						build_chaincode_func(temp);
+						build_invoke_func(temp);
 					}
 
 					// Step 3.
@@ -275,10 +275,17 @@ ibc.prototype.load_chaincode = function(options, cb) {
 // ============================================================================================================================
 // EXTERNAL - network() - setup network configuration to hit a rest peer
 // ============================================================================================================================
-ibc.prototype.network = function(arrayPeers){
+ibc.prototype.network = function(arrayPeers, options){
 	var errors = [];
+	var quiet = true;
+	var timeout = 60000;
 	if(!arrayPeers) errors.push('network input arg should be array of peer objects');
 	else if(arrayPeers.constructor !== Array) errors.push('network input arg should be array of peer objects');
+	
+	if(options){
+		if(options.quiet) quiet = options.quiet;									//optional field
+		if(options.timeout) timeout = options.timeout;
+	}
 
 	for(var i in arrayPeers){														//check for errors in peers
 		if(!arrayPeers[i].id) 		errors.push('peer ' + i + ' is missing the field id');
@@ -315,8 +322,8 @@ ibc.prototype.network = function(arrayPeers){
 								'Accept': 'application/json',
 							},
 					ssl: ibc.chaincode.details.peers[0].ssl,
-					timeout: 60000,
-					quiet: true
+					timeout: timeout,
+					quiet: quiet
 		});
 	}
 };
@@ -527,7 +534,7 @@ function query(args, username, cb){
 						secureContext: username
 					}
 				};
-	console.log('body', body);
+	//console.log('body', body);
 	options.success = function(statusCode, data){
 		console.log('[ibc-js] Query - success:', data);
 		if(cb) cb(null, data.OK);
@@ -752,14 +759,14 @@ ibc.prototype.monitor_blockheight = function(cb) {								//hook in your own fun
 //============================================================================================================================
 //													Helper Functions() 
 //============================================================================================================================
-//build_chaincode_func() - create JS function that calls the custom goLang function in the chaincode
+//build_invoke_func() - create JS function that calls the custom goLang function in the chaincode
 //==================================================================
-function build_chaincode_func(name){
+function build_invoke_func(name){
 	if(ibc.chaincode[name] != null){												//skip if already exists
 		//console.log('[ibc-js] \t skip, func', name, 'already exists');
 	}
 	else {
-		console.log('[ibc-js] Found cc function: ', name);
+		console.log('[ibc-js] Found cc invoke function: ', name);
 		ibc.chaincode.details.func.push(name);
 		ibc.chaincode[name] = function(args, username, cb){							//create the function in the chaincode obj
 			if(typeof username === 'function'){ 									//if cb is in 2nd param use known username
@@ -771,6 +778,54 @@ function build_chaincode_func(name){
 			}
 
 			var options = {path: '/devops/invoke'};
+			var body = {
+					chaincodeSpec: {
+						type: 'GOLANG',
+						chaincodeID: {
+							name: ibc.chaincode.details.deployed_name,
+						},
+						ctorMsg: {
+							function: name,
+							args: args
+						},
+						secureContext: username
+					}
+			};
+
+			options.success = function(statusCode, data){
+				console.log('[ibc-js]', name, ' - success:', data);
+				ibc.q.push(Date.now());												//new action, add it to queue
+				if(cb) cb(null, data);
+			};
+			options.failure = function(statusCode, e){
+				console.log('[ibc-js]', name, ' - failure:', statusCode, e);
+				if(cb) cb(eFmt('invoke() error', statusCode, e), null);
+			};
+			rest.post(options, '', body);
+		};
+	}
+}
+
+//==================================================================
+//build_query_func() - create JS function that calls the custom goLang function in the chaincode
+//==================================================================
+function build_query_func(name){
+	if(ibc.chaincode[name] != null){												//skip if already exists
+		//console.log('[ibc-js] \t skip, func', name, 'already exists');
+	}
+	else {
+		console.log('[ibc-js] Found cc query function: ', name);
+		ibc.chaincode.details.func.push(name);
+		ibc.chaincode[name] = function(args, username, cb){							//create the function in the chaincode obj
+			if(typeof username === 'function'){ 									//if cb is in 2nd param use known username
+				cb = username;
+				username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
+			}
+			if(username == null) {													//if username not provided, use known valid one
+				username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
+			}
+
+			var options = {path: '/devops/query'};
 			var body = {
 					chaincodeSpec: {
 						type: 'GOLANG',
