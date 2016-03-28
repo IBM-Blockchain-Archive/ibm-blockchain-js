@@ -1,4 +1,5 @@
-// Function testing the SDK
+// Testing ibc.load_chaincode with bad input
+// I expect this test to fail out, with err.message of bad zip url.
 
 // Starting out by requiring all dependancies
 var test = require('tape');
@@ -8,18 +9,16 @@ var Ibc1 = require('ibm-blockchain-js');
 var ibc = new Ibc1();
 var chaincode = {};
 
-// Define options for ibc.load_chaincode
-// In this case, this is just defining where to get the blockchain code
-var options = {
-	zip_url: 'https://github.com/ibm-blockchain/marbles-chaincode/archive/master.zip',
+// Define some options with a bad zip_url to see how the sdk catches it.
+var badZipOptions = {
+	zip_url: 'https://github.com/ibm-blockchain/marbles-chaincode/archive/master.zi',
 	unzip_dir: 'marbles-chaincode-master/part2', 
 	git_url: 'https://github.com/ibm-blockchain/marbles-chaincode/part2', 
 	deployed_name: null 
 };
 
-// Call the actual load_chaincode function of interest.
-// ibc.load_chaincode inputs options just spcified, outputs callbackready function.
-ibc.load_chaincode(options, function cb_ready(err, cc) {
+// Call the load_chaincode function, knowing that it's getting the wrong zip_url.
+ibc.load_chaincode(badZipOptions, function cb_ready(err, cc) {
 	test('Was the load_chaincode sucessful', function (t) {
 		t.error(err, 'There were no errors');
 		t.end();
