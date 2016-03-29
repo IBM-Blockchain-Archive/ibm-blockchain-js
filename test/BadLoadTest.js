@@ -18,9 +18,11 @@ var badZipOptions = {
 };
 
 // Call the load_chaincode function, knowing that it's getting the wrong zip_url.
-ibc.load_chaincode(badZipOptions, function cb_ready(err, cc) {
-	test('Was the load_chaincode sucessful', function (t) {
-		t.error(err, 'There were no errors');
-		t.end();
-	}); //end test
-});  //end load chaincode
+
+test('Passing in a typo, expecting an invalid zip format error', function (t) {
+	t.throws(function(){
+  		ibc.load_chaincode(options, function cb_ready(err, cc) {});
+	})
+	t.end();
+});
+
