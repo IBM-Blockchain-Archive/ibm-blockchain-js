@@ -23,6 +23,7 @@ test('Passing in a typo, expecting an invalid zip format error', function (t) {
 	t.throws(function(){
   		ibc.load_chaincode(options, function cb_ready(err, cc) {});
 	})
-	t.end();
+	ibc.clear(function() { t.end()
+	});
 });
 

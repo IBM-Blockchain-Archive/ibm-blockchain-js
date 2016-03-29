@@ -37,37 +37,32 @@ var options = {
     } 
 };
 
+test('Was the load_chaincode sucessful', function (t) {
 // Load the Marbles2 chaincode, with defined options, and return call-back-when-ready function.
-ibc.load(options, cb_ready);
+	ibc.load(options, cb_ready);
 
-// Define the call-back-when-ready function returned above
-// call-back-when-ready function has err
-function cb_ready(err, cc){
+	// Define the call-back-when-ready function returned above
+	// call-back-when-ready function has err
+	function cb_ready(err, cc){
 	//response has chaincode functions
-	//app1.setup(ibc, cc); 
-	//app2.setup(ibc, cc);
-
-	test('Was the load_chaincode sucessful', function (t) {
-		t.error(err, 'There were no errors');
-		t.end();
-	}); //end test
 	
+	t.error(err, 'There were no errors');
+
 	// if the deployed name is blank, then chaincode has not been deployed
 	if(cc.details.deployed_name === ""){ 
         cc.deploy('init', ['99'], './cc_summaries', cb_deployed);
+        function cb_deployed(err){
+			t.error(err, 'There were no errors');
+			console.log('sdk has deployed code and waited');
+			t.end();
+		}; //end test
+			
   	} 
   	else{
-		console.log('chaincode summary file indicates chaincode has been previously deployed');
+  		console.log('chaincode summary file indicates chaincode has been previously deployed');
+		t.end();
 		
-		// "Use dot notation on chaincode to call any of your chaincode functions" - Readme
-		function cb_deployed(err){
-			test('Was the load_chaincode sucessful', function (t) {
-				t.error(err, 'There were no errors');
-				t.end();
-			}); //end test
-			console.log('sdk has deployed code and waited');
-			chaincode.read('a'); 
-		} 
+		
 	};
 }
-
+});
