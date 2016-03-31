@@ -2,7 +2,7 @@
 
 // Starting out by requiring all dependancies
 var test = require('tape');
-var Ibc1 = require('ibm-blockchain-js');
+var Ibc1 = require('..');
 
 // Then define new instances.
 var ibc = new Ibc1();
@@ -19,9 +19,9 @@ var options = {
 
 // Call the actual function of interest
 // ibc.load_chaincode inputs options just spcified, outputs callbackready function
-ibc.load_chaincode(options, function cb_ready(err, cc) {
-	test('Was the load_chaincode sucessful', function (t) {
+test('Was the load_chaincode sucessful', function (t) {
+	ibc.load_chaincode(options, function cb_ready(err, cc) {
 		t.error(err, 'There were no errors');
-		t.end();
-	}); //end test
-});  //end load chaincode
+	}); //end load chaincode
+	t.end();
+});  //end test

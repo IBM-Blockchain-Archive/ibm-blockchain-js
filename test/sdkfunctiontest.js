@@ -3,7 +3,7 @@
 
 // Starting out by requiring all dependancies
 var test = require('tape');
-var Ibc1 = require('ibm-blockchain-js');
+var Ibc1 = require('..');
 
 // Then define new instances that will be needed
 var ibc = new Ibc1();
@@ -17,16 +17,16 @@ var options = {
 	// Service Credentials are found under the Blockchain instance tab.
 	
 	network:{ peers: [{
-		"api_host": "169.44.63.210",
-		"api_port": "45937",
-		"id": "cd750ebe-60cf-493d-907f-9ddf6202d6bd_vp1", 
-		"api_url": "http://169.44.63.210:45937"
+		"api_host": "3f3fa6c3-a8b4-48b2-95bc-63b5058fa333_vp1-api.blockchain.ibm.com",
+		"api_port": "80",
+		"id": "3f3fa6c3-a8b4-48b2-95bc-63b5058fa333_vp1", 
+		"api_url": "http://3f3fa6c3-a8b4-48b2-95bc-63b5058fa333_vp1-api.blockchain.ibm.com:80"
 	}],
 
 	// For simplicity, I chose the first user on the list provided.
 	users: [{
-		"username": "user_type0_2a590b0f89",
-		"secret": "c008a51fbc" 
+		"username": "user_type0_52737ec3c6",
+		"secret": "4841d68d27" 
 	}] }, 
 
 	// The chaincode version being tested here is the one deployed in Marbles2.
@@ -37,7 +37,7 @@ var options = {
     } 
 };
 
-test('Was the load_chaincode sucessful', function (t) {
+/*test('Was the load_chaincode sucessful', function (t) {
 // Load the Marbles2 chaincode, with defined options, and return call-back-when-ready function.
 	ibc.load(options, cb_ready);
 
@@ -66,3 +66,5 @@ test('Was the load_chaincode sucessful', function (t) {
 	};
 }
 });
+*/
+

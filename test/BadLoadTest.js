@@ -3,7 +3,7 @@
 
 // Starting out by requiring all dependancies
 var test = require('tape');
-var Ibc1 = require('ibm-blockchain-js');
+var Ibc1 = require('..');
 
 // Then define new instances.
 var ibc = new Ibc1();
