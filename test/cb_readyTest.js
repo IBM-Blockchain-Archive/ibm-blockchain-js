@@ -1,5 +1,6 @@
 // Function testing the SDK
 // This file contains the most recent tests still being developed.
+console.log("Now starting cb_readyTeats.js");
 
 // Starting out by requiring all dependancies
 var test = require('tape');

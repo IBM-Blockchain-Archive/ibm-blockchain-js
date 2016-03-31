@@ -1,5 +1,7 @@
 // Function testing the SDK
 
+console.log("Now starting ValidLoadTest.js");
+
 // Starting out by requiring all dependancies
 var test = require('tape');
 var Ibc1 = require('..');

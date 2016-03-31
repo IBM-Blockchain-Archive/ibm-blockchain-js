@@ -1,6 +1,8 @@
 // Testing ibc.load_chaincode with bad input
 // I expect this test to fail out, with err.message of bad zip url.
 
+console.log("Now starting BadLoadTest.js");
+
 // Starting out by requiring all dependancies
 var test = require('tape');
 var Ibc1 = require('..');
