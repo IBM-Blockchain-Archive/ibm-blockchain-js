@@ -43,10 +43,8 @@ test('Was the load_chaincode sucessful', function (t) {
 		});  // End of the Valid Load Test
 	}
 	else {
-		t.throws(function(){
-  			ibc.load_chaincode(options, function cb_ready(err, cc) {	
-  			});
-		});  //End of the Invalid Load Test
+		t.throws(ibc.load_chaincode(options, function cb_ready(err, cc)) {}, 
+			"Utils.Errors.INVALID_FORMAT;", "Invalid Options Caught!");
 	}
 	t.end();  //End Testing
 });
