@@ -1,5 +1,5 @@
 // Function testing the SDK
-
+// Logging statement to terminal to indicate which test is running.
 console.log("Now starting LoadTest.js");
 
 // Starting out by requiring all dependancies
@@ -10,13 +10,12 @@ var Ibc1 = require('..');
 var ibc = new Ibc1();
 var chaincode = {};
 
-// I think I need to define a flag which determines whether to use ...
-// Valid or Invalid Options for the test.
+// Define a flag which determines whether to use Valid or Invalid Options for the test.
 // V = Valid, I = Invalid
-var Flag = "I";
+var Flag = "V";
 
 // Define options for ibc.load_chancode, where to get the blockchain code
-// I need to make this an if/then flagged option to decide which option set to use.
+// Made this an if/then flagged option to decide which option set to use.
 if (Flag == "V") {
 	var options = {
 		zip_url: 'https://github.com/ibm-blockchain/marbles-chaincode/archive/master.zip',
@@ -34,6 +33,7 @@ else {
 		deployed_name: null 
 	};
 }
+
 // I need to create just one test, and run ibc.load inside of it.
 // I put the tests into an if/then with the Flag for options.
 test('Was the load_chaincode sucessful', function (t) {
