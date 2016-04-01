@@ -15,7 +15,8 @@ var fs = require('fs');
 var path = require('path');
 var https = require('https');
 var async = require('async');
-var rest = require(__dirname + '/lib/rest');
+var rest = require(__dirname + '/lib/rest.js');
+var helper = require(__dirname + '/lib/helper.js');
 var AdmZip = require('adm-zip');
 
 
@@ -59,7 +60,7 @@ ibc.prototype.load = function(options, cb){
 	if(!options.chaincode || !options.chaincode.git_url) errors.push('the option "chaincode.git_url" is required');
 	if(errors.length > 0){															//check for input errors
 		console.log('! [ibc-js] Input Error - ibc.load()', errors);
-		if(cb) cb(eFmt('load() input error', 400, errors));
+		if(cb) cb(helper.eFmt('load() input error', 400, errors));
 		return;																		//get out of dodge
 	}
 
@@ -86,7 +87,7 @@ ibc.prototype.load = function(options, cb){
 
 	// Step 2 - optional - only for secure networks
 	if(options.network.users){
-		options.network.users = filter_users(options.network.users);				//only use the appropriate IDs filter out the rest
+		options.network.users = helper.filter_users(options.network.users);			//only use the appropriate IDs filter out the rest
 	}
 	if(options.network.users && options.network.users.length > 0){
 		ibc.chaincode.details.users = options.network.users;
@@ -136,7 +137,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 	if(!options.git_url) errors.push('the option "git_url" is required');
 	if(errors.length > 0){																//check for input errors
 		console.log('! [ibc-js] Input Error - ibc.load_chaincode()', errors);
-		if(cb) cb(eFmt('load_chaincode() input error', 400, errors));
+		if(cb) cb(helper.eFmt('load_chaincode() input error', 400, errors));
 		return;																			//get out of dodge
 	}
 
@@ -192,7 +193,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 		}).on('error', function(err) {
 			console.log('! [ibc-js] Download error');
 			fs.unlink(zip_dest); 														//delete the file async
-			if (cb) cb(eFmt('doad_chaincode() download error', 500, err.message), ibc.chaincode);
+			if (cb) cb(helper.eFmt('doad_chaincode() download error', 500, err.message), ibc.chaincode);
 		});
 	}
 
@@ -229,7 +230,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 		if(!foundGo){																	//error no go files
 			msg = 'did not find any *.go files, cannot continue';
 			console.log('! [ibc-js] Error - ', msg);
-			if(cb) return cb(eFmt('load_chaincode() no chaincode', 400, msg), null);
+			if(cb) return cb(helper.eFmt('load_chaincode() no chaincode', 400, msg), null);
 		}
 		else{
 			
@@ -429,7 +430,7 @@ ibc.prototype.save =  function(dir, cb){
 	if(!dir) errors.push('the option "dir" is required');
 	if(errors.length > 0){																//check for input errors
 		console.log('[ibc-js] Input Error - ibc.save()', errors);
-		if(cb) cb(eFmt('save() input error', 400, errors));
+		if(cb) cb(helper.eFmt('save() input error', 400, errors));
 	}
 	else{
 		var fn = 'chaincode.json';														//default name
@@ -438,7 +439,7 @@ ibc.prototype.save =  function(dir, cb){
 		fs.writeFile(dest, JSON.stringify({details: ibc.chaincode.details}), function(e){
 			if(e != null){
 				console.log('[ibc-js] ibc.save() error', e);
-				if(cb) cb(eFmt('save() fs write error', 500, e), null);
+				if(cb) cb(helper.eFmt('save() fs write error', 500, e), null);
 			}
 			else {
 				//console.log(' - saved ', dest);
@@ -513,7 +514,7 @@ ibc.prototype.chain_stats =  function(cb){
 	};
 	options.failure = function(statusCode, e){
 		console.log('[ibc-js] Chain Stats - failure:', statusCode, e);
-		if(cb) cb(eFmt('chain_stats() error', statusCode, e), null);
+		if(cb) cb(helper.eFmt('chain_stats() error', statusCode, e), null);
 	};
 	rest.get(options, '');
 };
@@ -529,7 +530,7 @@ ibc.prototype.block_stats =  function(id, cb){
 	};
 	options.failure = function(statusCode, e){
 		console.log('[ibc-js] Block Stats - failure:', statusCode);
-		if(cb) cb(eFmt('block_stats() error', statusCode, e), null);
+		if(cb) cb(helper.eFmt('block_stats() error', statusCode, e), null);
 	};
 	rest.get(options, '');
 };
@@ -570,7 +571,7 @@ function read(name, username, cb){
 	};
 	options.failure = function(statusCode, e){
 		console.log('[ibc-js] Read - failure:', statusCode);
-		if(cb) cb(eFmt('read() error', statusCode, e), null);
+		if(cb) cb(helper.eFmt('read() error', statusCode, e), null);
 	};
 	rest.post(options, '', body);
 }
@@ -610,7 +611,7 @@ function query(args, username, cb){
 	};
 	options.failure = function(statusCode, e){
 		console.log('[ibc-js] Query - failure:', statusCode);
-		if(cb) cb(eFmt('query() error', statusCode, e), null);
+		if(cb) cb(helper.eFmt('query() error', statusCode, e), null);
 	};
 	rest.post(options, '', body);
 }
@@ -651,7 +652,7 @@ function write(name, val, username, cb){
 	};
 	options.failure = function(statusCode, e){
 		console.log('[ibc-js] Write - failure:', statusCode);
-		if(cb) cb(eFmt('write() error', statusCode, e), null);
+		if(cb) cb(helper.eFmt('write() error', statusCode, e), null);
 	};
 	rest.post(options, '', body);
 }
@@ -692,7 +693,7 @@ function remove(name, username, cb){
 	};
 	options.failure = function(statusCode, e){
 		console.log('[ibc-js] Remove - failure:', statusCode);
-		if(cb) cb(eFmt('remove() error', statusCode, e), null);
+		if(cb) cb(helper.eFmt('remove() error', statusCode, e), null);
 	};
 	rest.post(options, '', body);
 }
@@ -723,7 +724,7 @@ ibc.prototype.register = function(index, enrollID, enrollSecret, cb) {
 	};
 	options.failure = function(statusCode, e){
 		console.log('[ibc-js] Register - failure:', enrollID, statusCode);
-		if(cb) cb(eFmt('register() error', statusCode, e), null);
+		if(cb) cb(helper.eFmt('register() error', statusCode, e), null);
 	};
 	rest.post(options, '', body);
 };
@@ -770,7 +771,7 @@ function deploy(func, args, save_path, username, cb){
 	};
 	options.failure = function(statusCode, e){
 		console.log('[ibc-js] deploy - failure:', statusCode);
-		if(cb) cb(eFmt('deploy() error', statusCode, e), null);
+		if(cb) cb(helper.eFmt('deploy() error', statusCode, e), null);
 	};
 	rest.post(options, '', body);
 }
@@ -868,7 +869,7 @@ function build_invoke_func(name){
 			};
 			options.failure = function(statusCode, e){
 				console.log('[ibc-js]', name, ' - failure:', statusCode, e);
-				if(cb) cb(eFmt('invoke() error', statusCode, e), null);
+				if(cb) cb(helper.eFmt('invoke() error', statusCode, e), null);
 			};
 			rest.post(options, '', body);
 		};
@@ -916,35 +917,11 @@ function build_query_func(name){
 			};
 			options.failure = function(statusCode, e){
 				console.log('[ibc-js]', name, ' - failure:', statusCode, e);
-				if(cb) cb(eFmt('invoke() error', statusCode, e), null);
+				if(cb) cb(helper.eFmt('invoke() error', statusCode, e), null);
 			};
 			rest.post(options, '', body);
 		};
 	}
-}
-
-//==================================================================
-//filter_users() - return only client level usernames - [1=client, 2=nvp, 4=vp, 8=auditor accurate as of 2/18]
-//==================================================================
-function filter_users(users){														//this is only needed in a permissioned network
-	var valid_users = [];
-	for(var i = 0; i < users.length; i++) {
-		if(users[i].username.indexOf('user_type1') === 0){							//type should be 1 for client
-			valid_users.push(users[i]);
-		}
-	}
-	return valid_users;
-}
-
-//==================================================================
-//eFmt() - format errors
-//==================================================================
-function eFmt(name, code, details){													//my error format
-	return 	{
-		name: String(name),															//error short name
-		code: Number(code),															//http code when applicable
-		details: details															//error description
-	};
 }
 
 module.exports = ibc;
