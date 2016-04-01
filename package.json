@@ -1,6 +1,6 @@
 {
   "name": "ibm-blockchain-js",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "A library for easily interacting with IBM Blockchain.",
   "main": "index.js",
   "scripts": {
@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "tape": "latest"
-},
+  },
   "author": {
     "name": "David Huffman and Ben Smith"
   },
