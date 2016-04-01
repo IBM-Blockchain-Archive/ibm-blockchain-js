@@ -64,7 +64,9 @@ ibc.prototype.load = function(options, cb){
 	}
 
 	ibc.chaincode = {																//empty it all
-					query: {},
+					query: {
+						read: read
+					},
 					invoke: {},
 					deploy: null,
 					details:{
@@ -246,7 +248,6 @@ ibc.prototype.load_chaincode = function(options, cb) {
 			console.log('[ibc-js] load_chaincode() finished');
 			ibc.chaincode.details.timestamp = Date.now();
 			ibc.chaincode.deploy = deploy;
-			ibc.chaincode.query.read = read;
 			if(cb) return cb(null, ibc.chaincode);										//all done, send it to callback
 		}
 	}
