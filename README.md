@@ -6,6 +6,7 @@ All documentation is on this page.
 
 Table Of Contents:
 
+1. [v1.0.0 Migration!](#migrate)
 1. [IBC-js Function Documentation](#ibcjs)
 1. [Chaincode Functions](#ccfunc)
 1. [Object Formats](#formats)
@@ -33,11 +34,10 @@ npm install ibm-blockchain-js
 
 ```js
 		// The functions below need to exist in your actual chaincode GoLang file(s) 
-		chaincode.read('a', cb);			//will read variable "a" from current chaincode state
-		chaincode.query(['test'], cb);		//will read the variable "test"
-		chaincode.write('a', "test", cb)	//will write to vairable "a"
-		chaincode.remove('a', cb)			//will delete variable "a"
-		chaincode.init_marbles(ARGS, cb);	//calls my custom chaincode function init_marbles() and passes it ARGS
+		chaincode.query.read('a', cb);				//will read variable "a" from current chaincode state
+		chaincode.invoke.write('a', "test", cb)		//will write to vairable "a"
+		chaincode.invoke.remove('a', cb)			//will delete variable "a"
+		chaincode.invoke.init_marbles(ARGS, cb);	//calls my custom chaincode function init_marbles() and passes it ARGS
 ```
 
 ## Example
@@ -96,11 +96,50 @@ npm install ibm-blockchain-js
 	// Step 5 ==================================
 	function cb_deployed(err){
 		console.log('sdk has deployed code and waited');
-		chaincode.read('a');
+		chaincode.query.read('a');
 	}
 ```
 	
+	
 ***
+## <a name="migrate"></a>Migrating from 0.0.x to 1.x.x
+The interface to your chaincode functions has changed! 
+It is only a minor syntax change that should make it more clear to newcomers. 
+All invocation functions can now be found under `chaincode.invoke` and all query functions can be found under `chaincode.query`.
+
+Examples:
+
+**query changes**
+```js
+	//old code
+	chaincode.read('a');
+	
+	//new code 
+	chaincode.query.read('a');
+```
+
+**invoke changes**
+```js
+	//old code
+	chaincode.init_marble(args);
+	chaincode.remove(args);
+	chaincode.write(name, value);
+	
+	//new code 
+	chaincode.invoke.init_marble(args);
+	chaincode.invoke.remove(args);
+	chaincode.invoke.write(args);
+```
+
+**deploy changes**
+```js
+	//old code
+	chaincode.deploy('init', ['99'], './cc_summaries', cb_deployed);
+	
+	//new code 
+	chaincode.deploy('init', ['99'], {save_path: './cc_summaries', delay_ms: 60000}, cb_deployed);
+```
+
 ***
 
 ## <a name="ibcjs"></a>IBM-Blockchain-JS Documentation
@@ -309,39 +348,34 @@ Ex:
 - Chaincode functions are dependent on actually be found inside your Go chaincode
 - My advise is to build your chaincode off of the Marble Application one.  This way you get the basic CRUD functions below:
 
-### chaincode.read(name, [username], [callback])
+### chaincode.query.read(name, [username], [callback]) *legacy*
 Read variable named name from chaincode state. 
 This will call the `Query()` function in the Go chaincode, therefore the `Query()` function needs to exists in the cc. 
 The variable name will be passed as `arg[0]` to `Query()`. 
 The `username` parameter should be the desired secure context username that has already been registered against the selected peer. 
 If left `null` the SDK will use a known username for the selected peer. (this is only relevant in a permissioned network)
 
-### chaincode.query(args, [username], [callback])
-This will call the query function with custom input arguments. 
-Usually "args" is an array of strings. 
-The `username` parameter should be the desired secure context username that has already been registered against the selected peer. 
-If left `null` the SDK will use a known username for the selected peer. (this is only relevant in a permissioned network)
+*This function is only here to help people transition from 0.0.5+ to 1.0.0.*
+*You should create your own read() function in your chaincode to overwrite this hack*
 
-### chaincode.write(name, val, [username], [callback])
-Write 'val' to variable named 'name'. This will call the `write()` function in the Go chaincode, therefore the `write()` function needs to exists in the cc.
-The `username` parameter should be the desired secure context username that has already been registered against the selected peer. 
-If left `null` the SDK will use a known username for the selected peer. (this is only relevant in a permissioned network)
-
-### chaincode.remove(name, [username], [callback])
-Delete variable named 'name'. This will call the `delete()` function in the Go chaincode, therefore the `delete()` function needs to exists in the cc.
-The `username` parameter should be the desired secure context username that has already been registered against the selected peer. 
-If left `null` the SDK will use a known username for the selected peer. (this is only relevant in a permissioned network)
-
-### chaincode.deploy(func, args, [save_path], [username], [callback])
+### chaincode.deploy(func, args, [options], [username], [callback])
 Deploy the chaincode. 
 Call GoLang function named 'func' and feed it 'args'.
-Optionally save [Chaincode Summary File](#ccsf) to 'save_path'. 
+Usualy "args" is an array of strings.
+The `username` parameter should be the desired secure context username that has already been registered against the selected peer. 
+If left `null` the SDK will use a known username for the selected peer. (this is only relevant in a permissioned network)
+Options are 
+- save_path = save the [Chaincode Summary File](#ccsf) to 'save_path'. 
+- delay_ms = time in mililseconds to postpone the callback after deploy. Default is `40000`
+
+### chaincode.query.CUSTOM_FUNCTION_NAME(args, [username], [callback])
+Will invoke your Go function CUSTOM_FUNCTION_NAME and pass it 'arg'. 
 Usualy "args" is an array of strings.
 The `username` parameter should be the desired secure context username that has already been registered against the selected peer. 
 If left `null` the SDK will use a known username for the selected peer. (this is only relevant in a permissioned network)
 
-### chaincode.CUSTOM_FUNCTION_NAME(args, [username], [callback])
-Will invoke your Go function CUSTOM_FUNCTION_NAME and pass it 'arg'. 
+### chaincode.invoke.CUSTOM_FUNCTION_NAME(args, [username], [callback])
+Will query your Go function CUSTOM_FUNCTION_NAME and pass it 'arg'. 
 Usualy "args" is an array of strings.
 The `username` parameter should be the desired secure context username that has already been registered against the selected peer. 
 If left `null` the SDK will use a known username for the selected peer. (this is only relevant in a permissioned network)
@@ -357,14 +391,16 @@ It is returned in the callback to load_chaincode() and contains all your cc func
 ```js
 	chaincode = 
 		{
-			CUSTOM_FUNCTION_NAME1: function(args, cb){etc...};	//call chaincode function and pass it args
-			CUSTOM_FUNCTION_NAME2: function(args, cb){etc...};
-			CUSTOM_FUNCTION_NAME3: function(args, cb){etc...};
-			^^ etc...
-			read: function(name, cb),                   //read variable
-			query: function(args, cb),                  //^^
-			write: function(name, value, cb),           //write/create variable
-			remove: function(name, cb),	                //delete variable
+			query: {
+				CUSTOM_FUNCTION_NAME1: function(args, cb){etc...};	//call chaincode function and pass it args
+				CUSTOM_FUNCTION_NAME2: function(args, cb){etc...};
+				^^ etc...
+			}
+			invoke: {
+				CUSTOM_FUNCTION_NAME1: function(args, cb){etc...};	//call chaincode function and pass it args
+				CUSTOM_FUNCTION_NAME2: function(args, cb){etc...};
+				^^ etc...
+			}
 			deploy: function(func, args, path, cb),     //deploy loaded chaincode
 			details:{                                   //input options get stored here, sometimes handy
 						deployed_name: '',              //hash of deployed chaincode
