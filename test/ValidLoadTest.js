@@ -12,7 +12,7 @@ var chaincode = {};
 
 // Define a flag which determines whether to use Valid or Invalid Options for the test.
 // V = Valid, I = Invalid
-var Flag = "V";
+var Flag = "I";
 
 // Define options for ibc.load_chancode, where to get the blockchain code
 // Made this an if/then flagged option to decide which option set to use.
@@ -27,7 +27,7 @@ if (Flag == "V") {
 else {
 // Define some options with a bad zip_url to see how the sdk catches it.
 	var options = {
-		zip_url: 'https://github.com/ibm-blockchain/marbles-chaincode/archive/master.zi',
+		zip_url: 'https://github.com/ibm-lockchain/marbles-chaincode/archive/master.zip',
 		unzip_dir: 'marbles-chaincode-master/part2', 
 		git_url: 'https://github.com/ibm-blockchain/marbles-chaincode/part2', 
 		deployed_name: null 
