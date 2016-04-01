@@ -765,7 +765,7 @@ function deploy(func, args, save_path, username, cb){
 		if(save_path != null) ibc.prototype.save(save_path);					//user wants the updated file somewhere
 		if(cb){
 			var wait_ms = 40000;												//default wait after deploy, peer may still be starting
-			if(ibc.chaincode.details.options && ibc.chaincode.details.options.deploy_wait) wait_ms = ibc.chaincode.details.options.deploy_wait;
+			//if(ibc.chaincode.details.options && ibc.chaincode.details.options.deploy_wait) wait_ms = ibc.chaincode.details.options.deploy_wait;
 			console.log('\n\n\t deploy success [waiting another', (wait_ms / 1000) ,'seconds]');
 
 			setTimeout(function(){

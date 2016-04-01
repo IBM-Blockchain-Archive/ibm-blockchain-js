@@ -174,7 +174,6 @@ This should be an array of peer objects.
 The optional options parameter should be an object with the field `quiet` and/or `timeout`.
 - quiet = boolean - when true will print out only minimal HTTP debug information. Default `true`.
 - timeout = integer - time in ms to wait for a http response. Default `60000`.
-- deploy_wait = integer - additional time in ms to wait after a deploy (delaying the callback). Default `40000`.
 
 Ex:
 
