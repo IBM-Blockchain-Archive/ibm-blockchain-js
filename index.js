@@ -604,7 +604,7 @@ ibc.prototype.register = function(index, enrollID, enrollSecret, cb) {
 //============================================================================================================================
 //deploy() - deploy chaincode and call a cc function
 //============================================================================================================================
-function deploy(func, args, save_path, username, cb){
+function deploy(func, args, deploy_options, username, cb){
 	if(typeof username === 'function'){ 										//if cb is in 2nd param use known username
 		cb = username;
 		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
@@ -632,10 +632,10 @@ function deploy(func, args, save_path, username, cb){
 	options.success = function(statusCode, data){
 		ibc.chaincode.details.deployed_name = data.message;
 		ibc.prototype.save(tempDirectory);										//save it so we remember we have deployed
-		if(save_path != null) ibc.prototype.save(save_path);					//user wants the updated file somewhere
+		if(deploy_options.save_path != null) ibc.prototype.save(deploy_options.save_path);					//user wants the updated file somewhere
 		if(cb){
 			var wait_ms = 40000;												//default wait after deploy, peer may still be starting
-			//if(ibc.chaincode.details.options && ibc.chaincode.details.options.deploy_wait) wait_ms = ibc.chaincode.details.options.deploy_wait;
+			if(deploy_options.delay_ms && Number(deploy_options.delay_ms)) wait_ms = deploy_options.delay_ms;
 			console.log('\n\n\t deploy success [waiting another', (wait_ms / 1000) ,'seconds]');
 
 			setTimeout(function(){
