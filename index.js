@@ -121,7 +121,7 @@ ibc.prototype.load = function(options, cb){
 // 0. Load the github or zip
 // 1. Unzip & scan directory for files
 // 2. Iter over go files
-// 		2a. Find Run() in file, grab variable for *simplechaincode
+// 		2a. Find the boundaries for the Run() in the cc
 //		2b. Grab function names that need to be exported
 //		2c. Create JS function for golang function
 // 3. Call callback()
@@ -212,7 +212,8 @@ ibc.prototype.load_chaincode = function(options, cb) {
 				if(obj[i].indexOf('.go') >= 0){										//look for GoLang files
 					if(keep_looking){
 						foundGo = true;
-						fs.readFile(path.join(unzip_cc_dest, obj[i]), 'utf8', cb_read_go_file);
+						var file = fs.readFileSync(path.join(unzip_cc_dest, obj[i]), 'utf8');
+						parse_go_file(obj[i], file);
 					}
 				}
 			}
@@ -224,38 +225,59 @@ ibc.prototype.load_chaincode = function(options, cb) {
 		}
 	}
 
-	function cb_read_go_file(err, str){
+	function parse_go_file(name, str){
 		var msg = '';
-		if(err != null) console.log('! [ibc-js] fs readfile Error', err);
+		if(str == null) console.log('! [ibc-js] fs readfile Error');
 		else{
-
+			console.log('[ibc-js] Parsing file', name);
+			
 			// Step 2a.
-			var regex = /func\s+\((\w+)\s+\*SimpleChaincode\)\s+Run/i;				//find the variable name that Run is using for simplechaincode pointer
-			var res = str.match(regex);
-			if(!res || !res[1]){
+			var go_func_regex = /func\s+\(\w+\s+\*SimpleChaincode\)\s+(\w+)/g;		//find chaincode's go lang functions
+			var result, go_funcs = [];
+			while ( (result = go_func_regex.exec(str)) ) {
+				go_funcs.push({name: result[1], pos: result.index});
+			}
+			
+			var start = 0;
+			var stop = 0;
+			for(var i in go_funcs){
+				if(go_funcs[i].name.toLowerCase() === 'run'){
+					start = go_funcs[i].pos;										//find start and stop positions around the "Run()" function
+					if(go_funcs[Number(i) + 1] == null) stop = start * 2;			//run is the last function.. so uhhhh just make up a high number
+					else stop = go_funcs[Number(i) + 1].pos;
+					break;
+				}
+			}
+			
+			if(start === 0 && stop === 0){
 				msg = 'did not find Run() function in chaincode, cannot continue';
 				console.log('! [ibc-js] Error -', msg);
-				if(cb) cb(eFmt('load_chaincode() missing Run()', 400, msg), null);
+				if(cb) return cb(eFmt('load_chaincode() missing Run()', 400, msg), null);
 			}
 			else{
-				keep_looking = false;
-
+				
 				// Step 2b.
-				var re = new RegExp('\\s' + res[1] + '\\.(\\w+)\\(', 'gi');			//find the function names in Run()
-				res = str.match(re);
-				if(!res || res.length === 0){
-					msg = 'did not find GoLang functions in chaincode';
+				var regex = /function\s+==\s+"(\w+)"/g;									//find the exposed chaincode functions in "Run()""
+				var cc_funcs = [];
+				var result2;
+				while ( (result2 = regex.exec(str)) ) {
+					if(result2.index > start && result2.index < stop){					//make sure its inside Run()
+						cc_funcs.push(result2[1]);
+					}
+				}
+			
+				if(cc_funcs.length === 0){
+					msg = 'did not find GoLang functions exposed in chaincode\s Run() function';
 					console.log('[ibc-js] Error - ', msg);
-					if(cb) cb(eFmt('load_chaincode() no go functions', 400, msg), null);
+					if(cb) return cb(eFmt('load_chaincode() no go functions', 400, msg), null);
 				}
 				else{
-
+					keep_looking = false;
+				
 					// Step 2c.
 					ibc.chaincode.details.func = [];
-					for(var i in res){												//build the rest call for each function
-						var pos = res[i].indexOf('.');
-						var temp = res[i].substring(pos + 1, res[i].length - 1);
-						build_invoke_func(temp);
+					for(i in cc_funcs){													//build the rest call for each function
+						build_invoke_func(cc_funcs[i]);
 					}
 
 					// Step 3.
@@ -265,7 +287,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 					ibc.chaincode.write = write;
 					ibc.chaincode.remove = remove;
 					ibc.chaincode.deploy = deploy;
-					if(cb) cb(null, ibc.chaincode);									//all done, send it to callback
+					if(cb) return cb(null, ibc.chaincode);								//all done, send it to callback
 				}
 			}
 		}
@@ -443,7 +465,7 @@ ibc.prototype.chain_stats =  function(cb){
 		if(cb) cb(null, data);
 	};
 	options.failure = function(statusCode, e){
-		console.log('[ibc-js] Chain Stats - failure:', statusCode);
+		console.log('[ibc-js] Chain Stats - failure:', statusCode, e);
 		if(cb) cb(eFmt('chain_stats() error', statusCode, e), null);
 	};
 	rest.get(options, '');
