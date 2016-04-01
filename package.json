@@ -22,6 +22,9 @@
     "adm-zip": "0.4.4",
     "async": "1.5.0"
   },
+  "devDependencies": {
+    "tape": "latest"
+},
   "author": {
     "name": "David Huffman and Ben Smith"
   },
