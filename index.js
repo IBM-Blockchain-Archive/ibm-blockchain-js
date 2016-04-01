@@ -22,10 +22,8 @@ var AdmZip = require('adm-zip');
 
 function ibc() {}
 ibc.chaincode = {																	//init it all
-	read: null,
-	query: null,
-	write: null,
-	remove: null,
+	query: {},
+	invoke: {},
 	deploy: null,
 	details:{
 		deployed_name: '',
@@ -66,10 +64,8 @@ ibc.prototype.load = function(options, cb){
 	}
 
 	ibc.chaincode = {																//empty it all
-					read: null,
-					query: null,
-					write: null,
-					remove: null,
+					query: {},
+					invoke: {},
 					deploy: null,
 					details:{
 								deployed_name: '',
@@ -249,11 +245,8 @@ ibc.prototype.load_chaincode = function(options, cb) {
 			// Step 3.																	success!
 			console.log('[ibc-js] load_chaincode() finished');
 			ibc.chaincode.details.timestamp = Date.now();
-			ibc.chaincode.read = read;
-			ibc.chaincode.query = query;
-			ibc.chaincode.write = write;
-			ibc.chaincode.remove = remove;
 			ibc.chaincode.deploy = deploy;
+			ibc.chaincode.query.read = read;
 			if(cb) return cb(null, ibc.chaincode);										//all done, send it to callback
 		}
 	}
@@ -537,9 +530,8 @@ ibc.prototype.block_stats =  function(id, cb){
 	rest.get(options, '');
 };
 
-
 //============================================================================================================================
-//read() - read generic variable from chaincode state
+//read() - read generic variable from chaincode state - ! [legacy. do not use it anymore 4/1/2016]
 //============================================================================================================================
 function read(name, username, cb){
 	if(typeof username === 'function'){ 									//if cb is in 2nd param use known username
@@ -574,128 +566,6 @@ function read(name, username, cb){
 	options.failure = function(statusCode, e){
 		console.log('[ibc-js] Read - failure:', statusCode);
 		if(cb) cb(helper.eFmt('read() error', statusCode, e), null);
-	};
-	rest.post(options, '', body);
-}
-
-//============================================================================================================================
-//query() - read generic variable from chaincode state
-//============================================================================================================================
-function query(args, username, cb){
-	if(typeof username === 'function'){ 									//if cb is in 2nd param use known username
-		cb = username;
-		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
-	}
-	if(username == null) {													//if username not provided, use known valid one
-		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
-	}
-
-	var options = {
-		path: '/devops/query'
-	};
-	var body = {
-					chaincodeSpec: {
-						type: 'GOLANG',
-						chaincodeID: {
-							name: ibc.chaincode.details.deployed_name,
-						},
-						ctorMsg: {
-							function: 'query',
-							args: args
-						},
-						secureContext: username
-					}
-				};
-	//console.log('body', body);
-	options.success = function(statusCode, data){
-		console.log('[ibc-js] Query - success:', data);
-		if(cb) cb(null, data.OK);
-	};
-	options.failure = function(statusCode, e){
-		console.log('[ibc-js] Query - failure:', statusCode);
-		if(cb) cb(helper.eFmt('query() error', statusCode, e), null);
-	};
-	rest.post(options, '', body);
-}
-
-//============================================================================================================================
-//write() - write generic variable to chaincode state
-//============================================================================================================================
-function write(name, val, username, cb){
-	if(typeof username === 'function'){ 									//if cb is in 2nd param use known username
-		cb = username;
-		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
-	}
-	if(username == null) {													//if username not provided, use known valid one
-		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
-	}
-
-	var options = {
-		path: '/devops/invoke'
-	};
-	var body = {
-					chaincodeSpec: {
-						type: 'GOLANG',
-						chaincodeID: {
-							name: ibc.chaincode.details.deployed_name,
-						},
-						ctorMsg: {
-							function: 'write',
-							args: [name, val]
-						},
-						secureContext: username
-					}
-				};
-
-	options.success = function(statusCode, data){
-		console.log('[ibc-js] Write - success:', data);
-		ibc.q.push(Date.now());																//new action, add it to queue
-		if(cb) cb(null, data);
-	};
-	options.failure = function(statusCode, e){
-		console.log('[ibc-js] Write - failure:', statusCode);
-		if(cb) cb(helper.eFmt('write() error', statusCode, e), null);
-	};
-	rest.post(options, '', body);
-}
-
-//============================================================================================================================
-//remove() - delete a generic variable from chaincode state
-//============================================================================================================================
-function remove(name, username, cb){
-	if(typeof username === 'function'){ 									//if cb is in 2nd param use known username
-		cb = username;
-		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
-	}
-	if(username == null) {													//if username not provided, use known valid one
-		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
-	}
-
-	var options = {
-		path: '/devops/invoke'
-	};
-	var body = {
-					chaincodeSpec: {
-						type: 'GOLANG',
-						chaincodeID: {
-							name: ibc.chaincode.details.deployed_name,
-						},
-						ctorMsg: {
-							function: 'delete',
-							args: [name]
-						},
-						secureContext: username
-					}
-				};
-
-	options.success = function(statusCode, data){
-		console.log('[ibc-js] Remove - success:', data);
-		ibc.q.push(Date.now());																//new action, add it to queue
-		if(cb) cb(null, data);
-	};
-	options.failure = function(statusCode, e){
-		console.log('[ibc-js] Remove - failure:', statusCode);
-		if(cb) cb(helper.eFmt('remove() error', statusCode, e), null);
 	};
 	rest.post(options, '', body);
 }
@@ -837,13 +707,13 @@ ibc.prototype.monitor_blockheight = function(cb) {								//hook in your own fun
 //build_invoke_func() - create JS function that calls the custom goLang function in the chaincode
 //==================================================================
 function build_invoke_func(name){
-	if(ibc.chaincode[name] != null){												//skip if already exists
+	if(ibc.chaincode.invoke[name] != null){											//skip if already exists
 		//console.log('[ibc-js] \t skip, func', name, 'already exists');
 	}
 	else {
 		console.log('[ibc-js] Found cc invoke function: ', name);
 		ibc.chaincode.details.func.push(name);
-		ibc.chaincode[name] = function(args, username, cb){							//create the function in the chaincode obj
+		ibc.chaincode.invoke[name] = function(args, username, cb){					//create the function in the chaincode obj
 			if(typeof username === 'function'){ 									//if cb is in 2nd param use known username
 				cb = username;
 				username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
@@ -885,13 +755,13 @@ function build_invoke_func(name){
 //build_query_func() - create JS function that calls the custom goLang function in the chaincode
 //==================================================================
 function build_query_func(name){
-	if(ibc.chaincode[name] != null){												//skip if already exists
+	if(ibc.chaincode.query[name] != null){											//skip if already exists
 		//console.log('[ibc-js] \t skip, func', name, 'already exists');
 	}
 	else {
 		console.log('[ibc-js] Found cc query function: ', name);
 		ibc.chaincode.details.func.push(name);
-		ibc.chaincode[name] = function(args, username, cb){							//create the function in the chaincode obj
+		ibc.chaincode.query[name] = function(args, username, cb){					//create the function in the chaincode obj
 			if(typeof username === 'function'){ 									//if cb is in 2nd param use known username
 				cb = username;
 				username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
