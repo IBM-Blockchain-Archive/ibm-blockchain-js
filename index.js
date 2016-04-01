@@ -35,7 +35,8 @@ ibc.chaincode = {																	//init it all
 		timestamp: 0,
 		users: [],
 		unzip_dir: '',
-		zip_url: ''
+		zip_url: '',
+		options: {}
 	}
 };
 ibc.selectedPeer = 0;
@@ -78,7 +79,8 @@ ibc.prototype.load = function(options, cb){
 								timestamp: 0,
 								users: [],
 								unzip_dir: '',
-								zip_url: ''
+								zip_url: '',
+								options: options.network.options
 					}
 				};
 
@@ -758,15 +760,18 @@ function deploy(func, args, save_path, username, cb){
 				};
 	//console.log('!body', body);
 	options.success = function(statusCode, data){
-		console.log('\n\n\t deploy success [wait 1 more minute]');
 		ibc.chaincode.details.deployed_name = data.message;
 		ibc.prototype.save(tempDirectory);										//save it so we remember we have deployed
 		if(save_path != null) ibc.prototype.save(save_path);					//user wants the updated file somewhere
 		if(cb){
+			var wait_ms = 40000;												//default wait after deploy, peer may still be starting
+			if(ibc.chaincode.details.options && ibc.chaincode.details.options.deploy_wait) wait_ms = ibc.chaincode.details.options.deploy_wait;
+			console.log('\n\n\t deploy success [waiting another', (wait_ms / 1000) ,'seconds]');
+
 			setTimeout(function(){
 				console.log('[ibc-js] Deploying Chaincode - Complete');
 				cb(null, data);
-			}, 40000);															//wait extra long, not always ready yet
+			}, wait_ms);														//wait extra long, not always ready yet
 		}
 	};
 	options.failure = function(statusCode, e){
