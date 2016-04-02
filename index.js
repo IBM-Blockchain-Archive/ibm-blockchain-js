@@ -599,7 +599,8 @@ function deploy(func, args, deploy_options, username, cb){
 			var wait_ms = 40000;												//default wait after deploy, peer may still be starting
 			if(deploy_options.delay_ms && Number(deploy_options.delay_ms)) wait_ms = deploy_options.delay_ms;
 			console.log('\n\n\t deploy success [waiting another', (wait_ms / 1000) ,'seconds]');
-
+			console.log('deployed name', ibc.chaincode.details.deployed_name);
+			
 			setTimeout(function(){
 				console.log('[ibc-js] Deploying Chaincode - Complete');
 				cb(null, data);
