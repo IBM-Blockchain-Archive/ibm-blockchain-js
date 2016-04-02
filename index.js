@@ -27,7 +27,10 @@ ibc.chaincode = {																	//init it all
 	deploy: null,
 	details:{
 		deployed_name: '',
-		func: [],
+		func: {
+			invoke: [],
+			query: []
+		},
 		git_url: '',
 		peers: [],
 		timestamp: 0,
@@ -71,7 +74,10 @@ ibc.prototype.load = function(options, cb){
 					deploy: null,
 					details:{
 								deployed_name: '',
-								func: [],
+								func: {
+									invoke: [],
+									query: []
+								},
 								git_url: '',
 								peers: [],
 								timestamp: 0,
@@ -290,7 +296,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 					found_run = true;
 				
 					// Step 2c.
-					ibc.chaincode.details.func = [];
+					ibc.chaincode.details.func.invoke = [];
 					for(i in cc_invocations){											//build the rest call for each function
 						build_invoke_func(cc_invocations[i]);
 					}
@@ -328,7 +334,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 					found_query = true;
 				
 					// Step 2c.
-					ibc.chaincode.details.func = [];
+					ibc.chaincode.details.func.query = [];
 					for(i in cc_queries){												//build the rest call for each function
 						build_query_func(cc_queries[i]);
 					}
@@ -450,53 +456,8 @@ ibc.prototype.save =  function(dir, cb){
 // ============================================================================================================================
 ibc.prototype.clear =  function(cb){
 	console.log('[ibc-js] removing temp dir');
-	removeThing(tempDirectory, cb);											//remove everything in this directory
+	helper.removeThing(tempDirectory, cb);											//remove everything in this directory
 };
-
-function removeThing(dir, cb){
-	//console.log('!', dir);
-	fs.readdir(dir, function (err, files) {
-		if(err != null || !files || files.length === 0){
-			cb();
-		}
-		else{
-			async.each(files, function (file, cb) {							//over each thing
-				file = path.join(dir, file);
-				fs.stat(file, function(err, stat) {
-					if (err) {
-						if(cb) cb(err);
-						return;
-					}
-					if (stat.isDirectory()) {
-						removeThing(file, cb);								//keep going
-					}
-					else {
-						//console.log('!', dir);
-						fs.unlink(file, function(err) {
-							if (err) {
-								//console.log('error', err);
-								if(cb) cb(err);
-								return;
-							}
-							//console.log('good', dir);
-							if(cb) cb();
-							return;
-						});
-					}
-				});
-			}, function (err) {
-				if(err){
-					if(cb) cb(err);
-					return;
-				}
-				fs.rmdir(dir, function (err) {
-					if(cb) cb(err);
-					return;
-				});
-			});
-		}
-	});
-}
 
 //============================================================================================================================
 // EXTERNAL chain_stats() - get blockchain stats
@@ -701,7 +662,6 @@ ibc.prototype.monitor_blockheight = function(cb) {								//hook in your own fun
 };
 
 
-
 //============================================================================================================================
 //													Helper Functions() 
 //============================================================================================================================
@@ -713,7 +673,7 @@ function build_invoke_func(name){
 	}
 	else {
 		console.log('[ibc-js] Found cc invoke function: ', name);
-		ibc.chaincode.details.func.push(name);
+		ibc.chaincode.details.func.invoke.push(name);
 		ibc.chaincode.invoke[name] = function(args, username, cb){					//create the function in the chaincode obj
 			if(typeof username === 'function'){ 									//if cb is in 2nd param use known username
 				cb = username;
@@ -725,18 +685,18 @@ function build_invoke_func(name){
 
 			var options = {path: '/devops/invoke'};
 			var body = {
-					chaincodeSpec: {
-						type: 'GOLANG',
-						chaincodeID: {
-							name: ibc.chaincode.details.deployed_name,
-						},
-						ctorMsg: {
-							function: name,
-							args: args
-						},
-						secureContext: username
-					}
-			};
+							chaincodeSpec: {
+								type: 'GOLANG',
+								chaincodeID: {
+									name: ibc.chaincode.details.deployed_name,
+								},
+								ctorMsg: {
+									function: name,
+									args: args
+								},
+								secureContext: username
+							}
+						};
 
 			options.success = function(statusCode, data){
 				console.log('[ibc-js]', name, ' - success:', data);
@@ -761,7 +721,7 @@ function build_query_func(name){
 	}
 	else {
 		console.log('[ibc-js] Found cc query function: ', name);
-		ibc.chaincode.details.func.push(name);
+		ibc.chaincode.details.func.query.push(name);
 		ibc.chaincode.query[name] = function(args, username, cb){					//create the function in the chaincode obj
 			if(typeof username === 'function'){ 									//if cb is in 2nd param use known username
 				cb = username;
@@ -773,18 +733,18 @@ function build_query_func(name){
 
 			var options = {path: '/devops/query'};
 			var body = {
-					chaincodeSpec: {
-						type: 'GOLANG',
-						chaincodeID: {
-							name: ibc.chaincode.details.deployed_name,
-						},
-						ctorMsg: {
-							function: name,
-							args: args
-						},
-						secureContext: username
-					}
-			};
+							chaincodeSpec: {
+								type: 'GOLANG',
+								chaincodeID: {
+									name: ibc.chaincode.details.deployed_name,
+								},
+								ctorMsg: {
+									function: name,
+									args: args
+								},
+								secureContext: username
+							}
+						};
 
 			options.success = function(statusCode, data){
 				console.log('[ibc-js]', name, ' - success:', data);
