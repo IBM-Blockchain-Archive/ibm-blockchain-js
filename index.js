@@ -675,6 +675,25 @@ ibc.prototype.monitor_blockheight = function(cb) {								//hook in your own fun
 };
 
 //============================================================================================================================
+// EXTERNAL- get_transactions() - exposed function to find a transaction based on its UDID
+//============================================================================================================================
+ibc.prototype.get_transactions = function(udid, cb) {
+	var options = {
+		path: '/transactions/' + udid
+	};
+
+	options.success = function(statusCode, data){
+		console.log('[ibc-js] Get Transaction - success:', data);
+		if(cb) cb(null, data);
+	};
+	options.failure = function(statusCode, e){
+		console.log('[ibc-js] Get Transaction - failure:', statusCode);
+		if(cb) cb(helper.eFmt('read() error', statusCode, e), null);
+	};
+	rest.get(options, '');
+};
+
+//============================================================================================================================
 //													Helper Functions() 
 //============================================================================================================================
 //build_invoke_func() - create JS function that calls the custom goLang function in the chaincode
