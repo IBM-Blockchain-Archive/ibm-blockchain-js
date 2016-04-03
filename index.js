@@ -102,8 +102,8 @@ ibc.prototype.load = function(options, cb){
 			arr.push(i);															//build the list of indexes
 		}
 		async.each(arr, function(i, a_cb) {
-			if(options.network.users[i]){											//make sure we still have a user for this network
-				ibc.prototype.register(i, options.network.users[i].username, options.network.users[i].secret, a_cb);
+			if(options.network.users[i]){											//make sure we still have a enrollID for this network
+				ibc.prototype.register(i, options.network.users[i].enrollId, options.network.users[i].enrollSecret, a_cb);
 			}
 			else a_cb();
 		}, function(err, data){
@@ -509,13 +509,13 @@ ibc.prototype.block_stats =  function(id, cb){
 //============================================================================================================================
 //read() - read generic variable from chaincode state - ! [legacy. do not use it anymore 4/1/2016]
 //============================================================================================================================
-function read(name, username, cb){
-	if(typeof username === 'function'){ 									//if cb is in 2nd param use known username
-		cb = username;
-		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
+function read(name, enrollId, cb){
+	if(typeof enrollId === 'function'){ 									//if cb is in 2nd param use known enrollId
+		cb = enrollId;
+		enrollId = ibc.chaincode.details.peers[ibc.selectedPeer].enrollID;
 	}
-	if(username == null) {													//if username not provided, use known valid one
-		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
+	if(enrollId == null) {													//if enrollId not provided, use known valid one
+		enrollId = ibc.chaincode.details.peers[ibc.selectedPeer].enrollID;
 	}
 
 	var options = {
@@ -531,7 +531,7 @@ function read(name, username, cb){
 							function: 'query',
 							args: [name]
 						},
-						secureContext: username
+						secureContext: enrollId
 					}
 				};
 	//console.log('body', body);
@@ -547,7 +547,7 @@ function read(name, username, cb){
 }
 
 //============================================================================================================================
-// EXTERNAL - register() - register a username with a peer (only for a blockchain network with membership)
+// EXTERNAL - register() - register a enrollId with a peer (only for a blockchain network with membership)
 //============================================================================================================================
 ibc.prototype.register = function(index, enrollID, enrollSecret, cb) {
 	console.log('[ibc-js] Registering ', ibc.chaincode.details.peers[index].name, ' w/enrollID - ' + enrollID);
@@ -565,7 +565,7 @@ ibc.prototype.register = function(index, enrollID, enrollSecret, cb) {
 
 	options.success = function(statusCode, data){
 		console.log('[ibc-js] Registration success:', enrollID);
-		ibc.chaincode.details.peers[index].user = enrollID;								//remember a valid user for this peer
+		ibc.chaincode.details.peers[index].enrollID = enrollID;								//remember a valid enrollID for this peer
 		if(cb) cb(null, data);
 	};
 	options.failure = function(statusCode, e){
@@ -576,7 +576,7 @@ ibc.prototype.register = function(index, enrollID, enrollSecret, cb) {
 };
 
 //============================================================================================================================
-// EXTERNAL - unregister() - unregister a username from a peer (only for a blockchain network with membership), user can no longer make transactions
+// EXTERNAL - unregister() - unregister a enrollId from a peer (only for a blockchain network with membership), enrollID can no longer make transactions
 //============================================================================================================================
 ibc.prototype.unregister = function(index, enrollID, cb) {
 	console.log('[ibc-js] Unregistering ', ibc.chaincode.details.peers[index].name, ' w/enrollID - ' + enrollID);
@@ -589,7 +589,7 @@ ibc.prototype.unregister = function(index, enrollID, cb) {
 
 	options.success = function(statusCode, data){
 		console.log('[ibc-js] Unregistering success:', enrollID);
-		ibc.chaincode.details.peers[index].user = null;								//unremember a valid user for this peer
+		ibc.chaincode.details.peers[index].enrollID = null;								//unremember a valid enrollID for this peer
 		if(cb) cb(null, data);
 	};
 	options.failure = function(statusCode, e){
@@ -625,13 +625,13 @@ ibc.prototype.check_register = function(index, enrollID, cb) {
 //============================================================================================================================
 //deploy() - deploy chaincode and call a cc function
 //============================================================================================================================
-function deploy(func, args, deploy_options, username, cb){
-	if(typeof username === 'function'){ 										//if cb is in 2nd param use known username
-		cb = username;
-		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
+function deploy(func, args, deploy_options, enrollId, cb){
+	if(typeof enrollId === 'function'){ 										//if cb is in 2nd param use known enrollId
+		cb = enrollId;
+		enrollId = ibc.chaincode.details.peers[ibc.selectedPeer].enrollID;
 	}
-	if(username == null) {														//if username not provided, use known valid one
-		username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
+	if(enrollId == null) {														//if enrollId not provided, use known valid one
+		enrollId = ibc.chaincode.details.peers[ibc.selectedPeer].enrollID;
 	}
 
 	console.log('[ibc-js] Deploying Chaincode - Starting');
@@ -647,13 +647,13 @@ function deploy(func, args, deploy_options, username, cb){
 							'function': func,
 							'args': args
 					},
-					secureContext: username
+					secureContext: enrollId
 				};
 	//console.log('!body', body);
 	options.success = function(statusCode, data){
 		ibc.chaincode.details.deployed_name = data.message;
 		ibc.prototype.save(tempDirectory);										//save it so we remember we have deployed
-		if(deploy_options.save_path != null) ibc.prototype.save(deploy_options.save_path);					//user wants the updated file somewhere
+		if(deploy_options.save_path != null) ibc.prototype.save(deploy_options.save_path);
 		if(cb){
 			var wait_ms = 40000;												//default wait after deploy, peer may still be starting
 			if(deploy_options.delay_ms && Number(deploy_options.delay_ms)) wait_ms = deploy_options.delay_ms;
@@ -752,13 +752,13 @@ function build_invoke_func(name){
 	else {
 		console.log('[ibc-js] Found cc invoke function: ', name);
 		ibc.chaincode.details.func.invoke.push(name);
-		ibc.chaincode.invoke[name] = function(args, username, cb){					//create the function in the chaincode obj
-			if(typeof username === 'function'){ 									//if cb is in 2nd param use known username
-				cb = username;
-				username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
+		ibc.chaincode.invoke[name] = function(args, enrollId, cb){					//create the function in the chaincode obj
+			if(typeof enrollId === 'function'){ 									//if cb is in 2nd param use known enrollId
+				cb = enrollId;
+				enrollId = ibc.chaincode.details.peers[ibc.selectedPeer].enrollID;
 			}
-			if(username == null) {													//if username not provided, use known valid one
-				username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
+			if(enrollId == null) {													//if enrollId not provided, use known valid one
+				enrollId = ibc.chaincode.details.peers[ibc.selectedPeer].enrollID;
 			}
 
 			var options = {path: '/devops/invoke'};
@@ -772,7 +772,7 @@ function build_invoke_func(name){
 									function: name,
 									args: args
 								},
-								secureContext: username
+								secureContext: enrollId
 							}
 						};
 
@@ -800,13 +800,13 @@ function build_query_func(name){
 	else {
 		console.log('[ibc-js] Found cc query function: ', name);
 		ibc.chaincode.details.func.query.push(name);
-		ibc.chaincode.query[name] = function(args, username, cb){					//create the function in the chaincode obj
-			if(typeof username === 'function'){ 									//if cb is in 2nd param use known username
-				cb = username;
-				username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
+		ibc.chaincode.query[name] = function(args, enrollId, cb){					//create the function in the chaincode obj
+			if(typeof enrollId === 'function'){ 									//if cb is in 2nd param use known enrollId
+				cb = enrollId;
+				enrollId = ibc.chaincode.details.peers[ibc.selectedPeer].enrollID;
 			}
-			if(username == null) {													//if username not provided, use known valid one
-				username = ibc.chaincode.details.peers[ibc.selectedPeer].user;
+			if(enrollId == null) {													//if enrollId not provided, use known valid one
+				enrollId = ibc.chaincode.details.peers[ibc.selectedPeer].enrollID;
 			}
 
 			var options = {path: '/devops/query'};
@@ -820,7 +820,7 @@ function build_query_func(name){
 									function: name,
 									args: args
 								},
-								secureContext: username
+								secureContext: enrollId
 							}
 						};
 
