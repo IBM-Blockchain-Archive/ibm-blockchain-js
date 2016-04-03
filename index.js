@@ -351,19 +351,22 @@ ibc.prototype.network = function(arrayPeers, options){
 	var errors = [];
 	var quiet = true;
 	var timeout = 60000;
-	if(!arrayPeers) errors.push('network input arg should be array of peer objects');
-	else if(arrayPeers.constructor !== Array) errors.push('network input arg should be array of peer objects');
+	if(!arrayPeers || arrayPeers.constructor !== Array) errors.push('network input arg should be array of peer objects');
 	
 	if(options){
 		if(options.quiet === true || options.quiet === false) quiet = options.quiet;	//optional fields
-		if(Number(options.timeout)) timeout = options.timeout;
+		if(!isNaN(options.timeout)) timeout = Number(options.timeout);
 	}
 	
-	for(var i in arrayPeers){															//check for errors in peers
+	for(var i in arrayPeers){															//check for errors in peers input obj
 		if(!arrayPeers[i].id) 		errors.push('peer ' + i + ' is missing the field id');
 		if(!arrayPeers[i].api_host) errors.push('peer ' + i + ' is missing the field api_host');
-		if(!arrayPeers[i].api_port) errors.push('peer ' + i + ' is missing the field api_port');
-		if(!arrayPeers[i].api_url)  errors.push('peer ' + i + ' is missing the field api_url');
+		if(options.tls === false){
+			if(!arrayPeers[i].api_port) errors.push('peer ' + i + ' is missing the field api_port');
+		}
+		else{
+			if(!arrayPeers[i].api_port_tls) errors.push('peer ' + i + ' is missing the field api_port_tls');
+		}
 	}
 
 	if(errors.length > 0){																//check for input errors
@@ -374,31 +377,42 @@ ibc.prototype.network = function(arrayPeers, options){
 		for(i in arrayPeers){
 			var pos = arrayPeers[i].id.indexOf('_') + 1;
 			var temp = 	{
-							name: '',
+							name: arrayPeers[i].id.substring(pos) + '-' + arrayPeers[i].api_host + ':' + arrayPeers[i].api_port_tls,
 							api_host: arrayPeers[i].api_host,
 							api_port: arrayPeers[i].api_port,
+							api_port_tls:  arrayPeers[i].api_port_tls,
 							id: arrayPeers[i].id,
-							ssl: true
+							tls: true													//default
 						};
-			temp.name = arrayPeers[i].id.substring(pos) + '-' + arrayPeers[i].api_host + ':' + arrayPeers[i].api_port;	//build friendly name
-			if(arrayPeers[i].api_url.indexOf('https') == -1) temp.ssl = false;
-			console.log('[ibc-js] Peer: ', temp.name);
+			if(options.tls === false){													//if not tls rebuild a few things
+				temp.tls = false;
+				temp.name = arrayPeers[i].id.substring(pos) + '-' + arrayPeers[i].api_host + ':' + arrayPeers[i].api_port;
+			}
+	
+			console.log('[ibc-js] Peer: ', temp.name);									//print the friendly name
 			ibc.chaincode.details.peers.push(temp);
 		}
 
 		rest.init({																		//load default values for rest call to peer
 					host: ibc.chaincode.details.peers[0].api_host,
-					port: ibc.chaincode.details.peers[0].api_port,
+					port: pick_port(0),
 					headers: {
 								'Content-Type': 'application/json',
 								'Accept': 'application/json',
 							},
-					ssl: ibc.chaincode.details.peers[0].ssl,
+					ssl: ibc.chaincode.details.peers[0].tls,
 					timeout: timeout,
 					quiet: quiet
 		});
 	}
 };
+
+//pick tls or non-tls port based on the tls setting
+function pick_port(pos){
+	var port = ibc.chaincode.details.peers[pos].api_port_tls;
+	if(ibc.chaincode.details.peers[pos].tls === false) port = ibc.chaincode.details.peers[pos].api_port;
+	return port;
+}
 
 
 // ============================================================================================================================
@@ -408,12 +422,12 @@ ibc.prototype.switchPeer = function(index) {
 	if(ibc.chaincode.details.peers[index]) {
 		rest.init({																		//load default values for rest call to peer
 					host: ibc.chaincode.details.peers[index].api_host,
-					port: ibc.chaincode.details.peers[index].api_port,
+					port: pick_port(index),
 					headers: {
 								'Content-Type': 'application/json',
 								'Accept': 'application/json',
 							},
-					ssl: ibc.chaincode.details.peers[index].ssl,
+					ssl: ibc.chaincode.details.peers[index].tls,
 					timeout: 60000,
 					quiet: true
 		});
@@ -533,15 +547,15 @@ function read(name, username, cb){
 }
 
 //============================================================================================================================
-// EXTERNAL - register() - register a username with a peer (only for a secured blockchain network)
+// EXTERNAL - register() - register a username with a peer (only for a blockchain network with membership)
 //============================================================================================================================
 ibc.prototype.register = function(index, enrollID, enrollSecret, cb) {
 	console.log('[ibc-js] Registering ', ibc.chaincode.details.peers[index].name, ' w/enrollID - ' + enrollID);
 	var options = {
 		path: '/registrar',
 		host: ibc.chaincode.details.peers[index].api_host,
-		port: ibc.chaincode.details.peers[index].api_port,
-		ssl: ibc.chaincode.details.peers[index].ssl
+		port: pick_port(index),
+		ssl: ibc.chaincode.details.peers[index].tls
 	};
 
 	var body = 	{
@@ -552,9 +566,7 @@ ibc.prototype.register = function(index, enrollID, enrollSecret, cb) {
 	options.success = function(statusCode, data){
 		console.log('[ibc-js] Registration success:', enrollID);
 		ibc.chaincode.details.peers[index].user = enrollID;								//remember a valid user for this peer
-		if(cb){
-			cb(null, data);
-		}
+		if(cb) cb(null, data);
 	};
 	options.failure = function(statusCode, e){
 		console.log('[ibc-js] Register - failure:', enrollID, statusCode);
@@ -661,7 +673,6 @@ ibc.prototype.monitor_blockheight = function(cb) {								//hook in your own fun
 	setInterval(function(){heart_beat();}, fast_mode);
 	ibc.monitorFunction = cb;													//store it
 };
-
 
 //============================================================================================================================
 //													Helper Functions() 

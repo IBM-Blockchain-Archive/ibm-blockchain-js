@@ -447,7 +447,7 @@ I found it handy in niche cases, but it will probably be unhelpful to most devel
 			"api_host": "xxx.xxx.xxx.xxx",
 			"api_port": "xxx",
 			"id": "xxxxx_vp1",
-			"ssl": false,
+			"tls": false,
 			"user": "user1"
 		}],
 		"vars": [],
