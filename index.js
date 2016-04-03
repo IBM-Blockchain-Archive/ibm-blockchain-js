@@ -576,6 +576,53 @@ ibc.prototype.register = function(index, enrollID, enrollSecret, cb) {
 };
 
 //============================================================================================================================
+// EXTERNAL - unregister() - unregister a username from a peer (only for a blockchain network with membership), user can no longer make transactions
+//============================================================================================================================
+ibc.prototype.unregister = function(index, enrollID, cb) {
+	console.log('[ibc-js] Unregistering ', ibc.chaincode.details.peers[index].name, ' w/enrollID - ' + enrollID);
+	var options = {
+		path: '/registrar/' + enrollID,
+		host: ibc.chaincode.details.peers[index].api_host,
+		port: pick_port(index),
+		ssl: ibc.chaincode.details.peers[index].tls
+	};
+
+	options.success = function(statusCode, data){
+		console.log('[ibc-js] Unregistering success:', enrollID);
+		ibc.chaincode.details.peers[index].user = null;								//unremember a valid user for this peer
+		if(cb) cb(null, data);
+	};
+	options.failure = function(statusCode, e){
+		console.log('[ibc-js] Unregistering - failure:', enrollID, statusCode);
+		if(cb) cb(helper.eFmt('unregister() error', statusCode, e), null);
+	};
+	rest.delete(options, '');
+};
+
+//============================================================================================================================
+// EXTERNAL - check_register() - check if a enrollID is registered or not with a peer
+//============================================================================================================================
+ibc.prototype.check_register = function(index, enrollID, cb) {
+	console.log('[ibc-js] Checking ', ibc.chaincode.details.peers[index].name, ' w/enrollID - ' + enrollID);
+	var options = {
+		path: '/registrar/' + enrollID,
+		host: ibc.chaincode.details.peers[index].api_host,
+		port: pick_port(index),
+		ssl: ibc.chaincode.details.peers[index].tls
+	};
+
+	options.success = function(statusCode, data){
+		console.log('[ibc-js] Check Register success:', enrollID);
+		if(cb) cb(null, data);
+	};
+	options.failure = function(statusCode, e){
+		console.log('[ibc-js] Check Register - failure:', enrollID, statusCode);
+		if(cb) cb(helper.eFmt('check_register() error', statusCode, e), null);
+	};
+	rest.get(options, '');
+};
+
+//============================================================================================================================
 //deploy() - deploy chaincode and call a cc function
 //============================================================================================================================
 function deploy(func, args, deploy_options, username, cb){
