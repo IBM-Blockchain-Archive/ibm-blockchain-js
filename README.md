@@ -252,10 +252,9 @@ Get statistics on the network's chain.
 Ex:
 
 ```js
-	ibc.chain_stats(my_callback);
-	function my_callback(e, stats){
+	ibc.chain_stats(function(e, stats){
 		console.log('got some stats', stats);
-	}
+	});
 ```
 
 Example Chain Stats:
@@ -274,10 +273,9 @@ Get statistics on a particular block in the chain.
 Ex:
 
 ```js
-	ibc.block_stats(my_callback);
-	function my_callback(e, stats){
+	ibc.block_stats(function(e, stats){
 		console.log('got some stats', stats);
-	}
+	});
 ```
 
 Example Block Stats:
@@ -339,6 +337,17 @@ Ex:
 	function my_callback(e, chainstats){
 		console.log('got a new block!', chainstats);
 	}
+```
+
+### ibc.get_transaction(udid, [callback])
+Get information about a particular transaction ID.
+
+Ex:
+
+```js
+	ibc.get_transaction('d30a1445-185f-4853-b4d6-ee7b4dfa5534', function(err, data){
+		console.log('found trans', err, data);
+	});
 ```
 
 ***

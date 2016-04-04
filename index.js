@@ -734,9 +734,9 @@ ibc.prototype.monitor_blockheight = function(cb) {								//hook in your own fun
 };
 
 //============================================================================================================================
-// EXTERNAL- get_transactions() - exposed function to find a transaction based on its UDID
+// EXTERNAL- get_transaction() - exposed function to find a transaction based on its UDID
 //============================================================================================================================
-ibc.prototype.get_transactions = function(udid, cb) {
+ibc.prototype.get_transaction = function(udid, cb) {
 	var options = {
 		path: '/transactions/' + udid
 	};
