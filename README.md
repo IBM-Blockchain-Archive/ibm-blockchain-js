@@ -149,12 +149,12 @@ Take a look at how this function works, especially how it uses the register() fu
 If this is not applicable for your network (ie you have a custom IBM Blockchain network) you can easily create your own version of `ibc.load()` for your needs. 
 It will run in order:
 
-1. ibc.network() 
-1. ibc.register() 
+1. ibc.network(options.network.peers, options.network.options) *check out other options in ibc.network()*
+1. ibc.register(...) 
 	- It will register the first peer with the first username, the 2nd peer against the 2nd username and so on.
 	- This function only runs if valid users are found in options.network.users. A valid user is one that contains 'type_1'.
 	- Any errors in register will stop execution and run callback(err).
-1. ibc.load_chaincode() 
+1. ibc.load_chaincode(options.chaincode, [callback]) 
 1. callback(err, cc) 
 
 Options Parameter:
@@ -172,7 +172,7 @@ Options Parameter:
 				"username": "user1",
 				"secret": "xxxxxxxx"
 			}],
-			options: {						//this is optional
+			options: {            //this is optional, gets passed to ibc.network(peers, options);
 				quiet: true, 
 				timeout: 60000
 			}
@@ -211,9 +211,9 @@ Example
 Set the information about the peers in the network.
 This should be an array of peer objects. 
 The optional options parameter should be an object with the field `quiet` and/or `timeout`.
-- quiet = boolean - when true will print out only minimal HTTP debug information. Default `true`.
-- timeout = integer - time in ms to wait for a http response. Default `60000`.
-
+- quiet = boolean - when true will print out only minimal HTTP debug information. Defaults `true`.
+- timeout = integer - time in ms to wait for a http response. Defaults `60000`.
+- tls = boolean - when `false` will use HTTP instead of HTTPS. Defaults `true`.
 Ex:
 
 ```js
