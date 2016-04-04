@@ -103,7 +103,9 @@ ibc.prototype.load = function(options, cb){
 		}
 		async.each(arr, function(i, a_cb) {
 			if(options.network.users[i]){											//make sure we still have a enrollID for this network
-				ibc.prototype.register(i, options.network.users[i].enrollId, options.network.users[i].enrollSecret, a_cb);
+				var maxRetry = 2;
+				if(options.network.options && options.network.options.maxRety) maxRetry = options.network.options.maxRetry;
+				ibc.prototype.register(i, options.network.users[i].enrollId, options.network.users[i].enrollSecret, maxRetry, a_cb);
 			}
 			else a_cb();
 		}, function(err, data){
@@ -549,7 +551,11 @@ function read(name, enrollId, cb){
 //============================================================================================================================
 // EXTERNAL - register() - register a enrollId with a peer (only for a blockchain network with membership)
 //============================================================================================================================
-ibc.prototype.register = function(index, enrollID, enrollSecret, cb) {
+ibc.prototype.register = function(index, enrollID, enrollSecret, maxRetry, cb) {
+	register(index, enrollID, enrollSecret, maxRetry, 1, cb);
+};
+
+function register(index, enrollID, enrollSecret, maxRetry, attempt, cb){
 	console.log('[ibc-js] Registering ', ibc.chaincode.details.peers[index].name, ' w/enrollID - ' + enrollID);
 	var options = {
 		path: '/registrar',
@@ -564,16 +570,22 @@ ibc.prototype.register = function(index, enrollID, enrollSecret, cb) {
 				};
 
 	options.success = function(statusCode, data){
-		console.log('[ibc-js] Registration success:', enrollID);
+		console.log('[ibc-js] Registration success x' + attempt + ' :', enrollID);
 		ibc.chaincode.details.peers[index].enrollID = enrollID;							//remember a valid enrollID for this peer
 		if(cb) cb(null, data);
 	};
 	options.failure = function(statusCode, e){
-		console.log('[ibc-js] Register - failure:', enrollID, statusCode);
-		if(cb) cb(helper.eFmt('register() error', statusCode, e), null);
+		console.log('[ibc-js] Register - failure x' + attempt + ' :', enrollID, statusCode);
+		if(attempt <= maxRetry){														//lets try again after a short delay, maybe the peer is still starting
+			console.log('[ibc-js] \tgoing to try to register again in 30 secs');
+			setTimeout(function(){register(index, enrollID, enrollSecret, maxRetry, ++attempt, cb);}, 30000);
+		}
+		else{
+			if(cb) cb(helper.eFmt('register() error', statusCode, e), null);			//give up
+		}
 	};
 	rest.post(options, '', body);
-};
+}
 
 //============================================================================================================================
 // EXTERNAL - unregister() - unregister a enrollId from a peer (only for a blockchain network with membership), enrollID can no longer make transactions
