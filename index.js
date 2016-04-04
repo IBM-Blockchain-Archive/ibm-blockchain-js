@@ -104,7 +104,7 @@ ibc.prototype.load = function(options, cb){
 		async.each(arr, function(i, a_cb) {
 			if(options.network.users[i]){											//make sure we still have a enrollID for this network
 				var maxRetry = 2;
-				if(options.network.options && options.network.options.maxRety) maxRetry = options.network.options.maxRetry;
+				if(options.network.options && options.network.options.maxRetry) maxRetry = options.network.options.maxRetry;
 				ibc.prototype.register(i, options.network.users[i].enrollId, options.network.users[i].enrollSecret, maxRetry, a_cb);
 			}
 			else a_cb();
@@ -556,7 +556,7 @@ ibc.prototype.register = function(index, enrollID, enrollSecret, maxRetry, cb) {
 };
 
 function register(index, enrollID, enrollSecret, maxRetry, attempt, cb){
-	console.log('[ibc-js] Registering ', ibc.chaincode.details.peers[index].name, ' w/enrollID - ' + enrollID);
+	console.log(maxRetry, '[ibc-js] Registering ', ibc.chaincode.details.peers[index].name, ' w/enrollID - ' + enrollID);
 	var options = {
 		path: '/registrar',
 		host: ibc.chaincode.details.peers[index].api_host,
