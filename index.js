@@ -288,7 +288,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 				var regex = /function\s+==\s+["'](\w+)["']/g;							//find the exposed chaincode functions in "Run()""
 				var result2;
 				while ( (result2 = regex.exec(str)) ) {
-					cc_suspects.push(result2[1]);										//store this for when parsing query which runs next
+					cc_suspects.push({name: result2[1], index: result2.index});			//store this for when parsing query which runs next
 					if(result2.index > i_start && result2.index < i_stop){				//make sure its inside Run()
 						cc_invocations.push(result2[1]);
 					}
@@ -328,7 +328,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 				// Step 2b.
 				for(i in cc_suspects){
 					if(cc_suspects[i].index > q_start && cc_suspects[i].index < q_stop){//make sure its inside Query()
-						cc_queries.push(cc_suspects[i][1]);
+						cc_queries.push(cc_suspects[i].name);
 					}
 				}
 			
@@ -806,7 +806,7 @@ function build_invoke_func(name){
 //build_query_func() - create JS function that calls the custom goLang function in the chaincode
 //==================================================================
 function build_query_func(name){
-	if(ibc.chaincode.query[name] != null){											//skip if already exists
+	if(ibc.chaincode.query[name] != null && name !== 'read'){						//skip if already exists
 		//console.log('[ibc-js] \t skip, func', name, 'already exists');
 	}
 	else {
@@ -838,8 +838,7 @@ function build_query_func(name){
 
 			options.success = function(statusCode, data){
 				console.log('[ibc-js]', name, ' - success:', data);
-				ibc.q.push(Date.now());												//new action, add it to queue
-				if(cb) cb(null, data);
+				if(cb) cb(null, data.OK);
 			};
 			options.failure = function(statusCode, e){
 				console.log('[ibc-js]', name, ' - failure:', statusCode, e);
