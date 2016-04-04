@@ -84,7 +84,7 @@ npm install ibm-blockchain-js
 		app2.setup(ibc, cc);
 	
 	// Step 4 ==================================
-		if(cc.details.deployed_name === ""){				//decide if i need to deploy or not
+		if(cc.details.deployed_name === ""){				//decide if I need to deploy or not
 			cc.deploy('init', ['99'], './cc_summaries', cb_deployed);
 		}
 		else{
@@ -325,7 +325,7 @@ Ex:
 ```
 	
 ### ibc.register(peerIndex, enrollID, enrollsecret, maxRetry, [callback])
-Only applicable oo a network with security enabled. 
+Only applicable on a network with security enabled. 
 `register()` will register against peer[peerIndex] with the provided credentials.
 If successful, the peer will now use this `enrollID` to perform any http requests.
 - peerIndex = integer - position of peer in peers array (the one you fed ibc.networks()) you want to register against.
@@ -373,7 +373,7 @@ Ex:
 ### chaincode.deploy(func, args, [options], [username], [callback])
 Deploy the chaincode. 
 Call GoLang function named 'func' and feed it 'args'.
-Usualy "args" is an array of strings.
+Usually "args" is an array of strings.
 The `username` parameter should be the desired secure context username that has already been registered against the selected peer. 
 If left `null` the SDK will use a known username for the selected peer. (this is only relevant in a permissioned network)
 Options are 
