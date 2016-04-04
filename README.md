@@ -103,7 +103,7 @@ npm install ibm-blockchain-js
 	
 ***
 ## <a name="migrate"></a>Migrating from v0.0.x to v1.x.x
-The interface to your chaincode functions has changed! 
+The interface to your chaincode functions has changed in v1.0.0 from v0.0.13! 
 It is only a minor syntax change that should make it more clear to newcomers. 
 All invocation functions can now be found under `chaincode.invoke` and all query functions can be found under `chaincode.query`.
 
@@ -138,6 +138,16 @@ Examples:
 	
 	//new code 
 	chaincode.deploy('init', ['99'], {save_path: './cc_summaries', delay_ms: 60000}, cb_deployed);
+```
+
+**register changes** - added new parameter
+```js
+	//old code
+	ibc.register(i, enrollId, enrollSecret, [callback]);
+	
+	//new code 
+	ibc.register(i, enrollId, enrollSecret, maxRetry, [callback]);
+
 ```
 
 ***
@@ -314,15 +324,18 @@ Ex:
 	ibc.switchPeer(2);
 ```
 	
-### ibc.register(peerIndex, enrollID, enrollsecret, [callback])
+### ibc.register(peerIndex, enrollID, enrollsecret, maxRetry, [callback])
 Only applicable oo a network with security enabled. 
 `register()` will register against peer[peerIndex] with the provided credentials.
 If successful, the peer will now use this `enrollID` to perform any http requests.
-
+- peerIndex = integer - position of peer in peers array (the one you fed ibc.networks()) you want to register against.
+- enrollID = string - name of secure context username.
+- enrollSecret = string - password/secret/api key of secure context user.
+- maxRetry = integer - number of times to retry this call before giving up.
 Ex:
 	
 ```js
-	ibc.register(3, 'user1', 'xxxxxx', my_cb);
+	ibc.register(3, 'user1', 'xxxxxx', 3, my_cb);
 ```
 
 ### ibc.monitor_blockheight(callback)
