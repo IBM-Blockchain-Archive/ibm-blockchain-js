@@ -461,8 +461,12 @@ I found it handy in niche cases, but it will probably be unhelpful to most devel
 	{
 	"details": {
 		"deployed_name": "f6c084c42b3bde90c03f214ac6e0426e3e594807901fb1464287f2c3a18ade717bc495298958287594f81bb0d0cfdd3b4346d438d3b587d4fc73cf78ae8f7dfe",
-		"func": ["init", "Delete", "Write", "init_marble", "set_user", "open_trade", "perform_trade", "remember_me"],
-		"unzip_dir": 'marbles-chaincode-master/part2',
+		"func": {
+					"invoke": ["init", "delete", "write", "init_marble", "set_user", "open_trade", "perform_trade"],
+				},
+				{
+					"query": []
+				},
 		"git_url": 'https://github.com/ibm-blockchain/marbles-chaincode/part2'
 		"peers": [{
 			"name": "vp1-xxx.xxx.xxx.xxx",
@@ -470,10 +474,16 @@ I found it handy in niche cases, but it will probably be unhelpful to most devel
 			"api_port": "xxx",
 			"id": "xxxxx_vp1",
 			"tls": false,
-			"user": "user1"
+			"enrollID": "user1"
 		}],
-		"vars": [],
+		"timestamp": 1459779181971,
+		"users": [{
+			"enrollId": "user_type1_xxx",
+			"enrollSecret": "xxx"
+		}],
+		"unzip_dir": 'marbles-chaincode-master/part2',
 		"zip_url": 'https://github.com/ibm-blockchain/marbles-chaincode/archive/master.zip',
+		"options": {}
 		}
 	}
 ```
