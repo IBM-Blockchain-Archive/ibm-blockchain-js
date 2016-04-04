@@ -361,7 +361,7 @@ ibc.prototype.network = function(arrayPeers, options){
 	for(var i in arrayPeers){															//check for errors in peers input obj
 		if(!arrayPeers[i].id) 		errors.push('peer ' + i + ' is missing the field id');
 		if(!arrayPeers[i].api_host) errors.push('peer ' + i + ' is missing the field api_host');
-		if(options.tls === false){
+		if(options && options.tls === false){
 			if(!arrayPeers[i].api_port) errors.push('peer ' + i + ' is missing the field api_port');
 		}
 		else{
@@ -377,16 +377,16 @@ ibc.prototype.network = function(arrayPeers, options){
 		for(i in arrayPeers){
 			var pos = arrayPeers[i].id.indexOf('_') + 1;
 			var temp = 	{
-							name: arrayPeers[i].id.substring(pos) + '-' + arrayPeers[i].api_host + ':' + arrayPeers[i].api_port_tls,
+							name: arrayPeers[i].id.substring(pos) + '-' + arrayPeers[i].id.substring(0, 12) + '...:' + arrayPeers[i].api_port_tls,
 							api_host: arrayPeers[i].api_host,
 							api_port: arrayPeers[i].api_port,
 							api_port_tls:  arrayPeers[i].api_port_tls,
 							id: arrayPeers[i].id,
 							tls: true													//default
 						};
-			if(options.tls === false){													//if not tls rebuild a few things
+			if(options && options.tls === false){										//if not tls rebuild a few things
 				temp.tls = false;
-				temp.name = arrayPeers[i].id.substring(pos) + '-' + arrayPeers[i].api_host + ':' + arrayPeers[i].api_port;
+				temp.name = arrayPeers[i].id.substring(pos) + '-' + arrayPeers[i].id.substring(0, 12) + '...:' + arrayPeers[i].api_port;
 			}
 	
 			console.log('[ibc-js] Peer: ', temp.name);									//print the friendly name
@@ -477,7 +477,7 @@ ibc.prototype.clear =  function(cb){
 // EXTERNAL chain_stats() - get blockchain stats
 //============================================================================================================================
 ibc.prototype.chain_stats =  function(cb){
-	var options = {path: '/chain'};									//very simple API, get chainstats!
+	var options = {path: '/chain'};													//very simple API, get chainstats!
 
 	options.success = function(statusCode, data){
 		console.log('[ibc-js] Chain Stats - success');
@@ -494,7 +494,7 @@ ibc.prototype.chain_stats =  function(cb){
 // EXTERNAL block_stats() - get block meta data
 //============================================================================================================================
 ibc.prototype.block_stats =  function(id, cb){
-	var options = {path: '/chain/blocks/' + id};							//i think block IDs start at 0, height starts at 1, fyi
+	var options = {path: '/chain/blocks/' + id};									//i think block IDs start at 0, height starts at 1, fyi
 	options.success = function(statusCode, data){
 		console.log('[ibc-js] Block Stats - success');
 		if(cb) cb(null, data);
@@ -565,7 +565,7 @@ ibc.prototype.register = function(index, enrollID, enrollSecret, cb) {
 
 	options.success = function(statusCode, data){
 		console.log('[ibc-js] Registration success:', enrollID);
-		ibc.chaincode.details.peers[index].enrollID = enrollID;								//remember a valid enrollID for this peer
+		ibc.chaincode.details.peers[index].enrollID = enrollID;							//remember a valid enrollID for this peer
 		if(cb) cb(null, data);
 	};
 	options.failure = function(statusCode, e){
@@ -634,7 +634,7 @@ function deploy(func, args, deploy_options, enrollId, cb){
 		enrollId = ibc.chaincode.details.peers[ibc.selectedPeer].enrollID;
 	}
 
-	console.log('[ibc-js] Deploying Chaincode - Starting');
+	console.log('[ibc-js] Deploy Chaincode - Starting');
 	console.log('[ibc-js] \tfunction:', func, ', arg:', args);
 	console.log('\n\n\t Waiting...');											//this can take awhile
 	var options = {path: '/devops/deploy'};
@@ -653,15 +653,15 @@ function deploy(func, args, deploy_options, enrollId, cb){
 	options.success = function(statusCode, data){
 		ibc.chaincode.details.deployed_name = data.message;
 		ibc.prototype.save(tempDirectory);										//save it so we remember we have deployed
-		if(deploy_options.save_path != null) ibc.prototype.save(deploy_options.save_path);
+		if(deploy_options && deploy_options.save_path != null) ibc.prototype.save(deploy_options.save_path);
 		if(cb){
 			var wait_ms = 40000;												//default wait after deploy, peer may still be starting
-			if(deploy_options.delay_ms && Number(deploy_options.delay_ms)) wait_ms = deploy_options.delay_ms;
+			if(deploy_options && deploy_options.delay_ms && Number(deploy_options.delay_ms)) wait_ms = deploy_options.delay_ms;
 			console.log('\n\n\t deploy success [waiting another', (wait_ms / 1000) ,'seconds]');
-			console.log('deployed name', ibc.chaincode.details.deployed_name);
+			console.log('\t', ibc.chaincode.details.deployed_name, '\n');
 			
 			setTimeout(function(){
-				console.log('[ibc-js] Deploying Chaincode - Complete');
+				console.log('[ibc-js] Deploy Chaincode - Complete');
 				cb(null, data);
 			}, wait_ms);														//wait extra long, not always ready yet
 		}
