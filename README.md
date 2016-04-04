@@ -34,10 +34,10 @@ npm install ibm-blockchain-js
 
 ```js
 		// The functions below need to exist in your actual chaincode GoLang file(s) 
-		chaincode.query.read('a', cb);				//will read variable "a" from current chaincode state
-		chaincode.invoke.write('a', "test", cb)		//will write to variable "a"
-		chaincode.invoke.remove('a', cb)			//will delete variable "a"
-		chaincode.invoke.init_marbles(ARGS, cb);	//calls my custom chaincode function init_marbles() and passes it ARGS
+		chaincode.query.read(['a'], cb);              //will read variable "a" from current chaincode state
+		chaincode.invoke.write(['a', 'test'], cb);    //will write to variable "a"
+		chaincode.invoke.remove(['a'], cb);           //will delete variable "a"
+		chaincode.invoke.init_marbles([ARGS], cb);    //calls my custom chaincode function init_marbles() and passes it ARGS
 ```
 
 ## Example
@@ -70,8 +70,8 @@ npm install ibm-blockchain-js
 		},
 		chaincode:{
 			zip_url: 'https://github.com/ibm-blockchain/marbles-chaincode/archive/master.zip',
-			unzip_dir: 'marbles-chaincode-master/part2',
-			git_url: 'https://github.com/ibm-blockchain/marbles-chaincode/part2'
+			unzip_dir: 'marbles-chaincode-master/part2_v1.0.0',
+			git_url: 'https://github.com/ibm-blockchain/marbles-chaincode/part2_v1.0.0'
 		}
 	};
 	
@@ -96,7 +96,7 @@ npm install ibm-blockchain-js
 	// Step 5 ==================================
 	function cb_deployed(err){
 		console.log('sdk has deployed code and waited');
-		chaincode.query.read('a');
+		chaincode.query.read(['a']);
 	}
 ```
 	
@@ -115,7 +115,7 @@ Examples:
 	chaincode.read('a');
 	
 	//new code 
-	chaincode.query.read('a');
+	chaincode.query.read(['a']);
 ```
 
 **invoke changes** - name change
@@ -189,8 +189,8 @@ Options Parameter:
 		},
 		chaincode:{
 			zip_url: 'https://github.com/ibm-blockchain/marbles-chaincode/archive/master.zip', //http/https of a link to download zip
-			unzip_dir: 'marbles-chaincode-master/part2',                                        //name/path to folder that contains the chaincode you want to deploy (path relative to unzipped root)
-			git_url: 'https://github.com/ibm-blockchain/marbles-chaincode/part2',             //git https URL. should point to the desired chaincode repo AND directory
+			unzip_dir: 'marbles-chaincode-master/part2_v1.0.0',                                        //name/path to folder that contains the chaincode you want to deploy (path relative to unzipped root)
+			git_url: 'https://github.com/ibm-blockchain/marbles-chaincode/part2_v1.0.0',             //git https URL. should point to the desired chaincode repo AND directory
 			
 			deployed_name: null    //[optional] this is the hashed name of a deployed chaincode.  if you want to run with chaincode that is already deployed set it now, else it will be set when you deploy with the sdk
 		}
@@ -209,8 +209,8 @@ Example
 ```js
 	var options = 	{
 		zip_url: 'https://github.com/ibm-blockchain/marbles-chaincode/archive/master.zip', //http/https of a link to download zip
-		unzip_dir: 'marbles-chaincode-master/part2',                                        //name/path to folder that contains the chaincode you want to deploy (path relative to unzipped root)
-		git_url: 'https://github.com/ibm-blockchain/marbles-chaincode/part2',             //git https URL. should point to the desired chaincode repo AND directory
+		unzip_dir: 'marbles-chaincode-master/part2_v1.0.0',                                        //name/path to folder that contains the chaincode you want to deploy (path relative to unzipped root)
+		git_url: 'https://github.com/ibm-blockchain/marbles-chaincode/part2_v1.0.0',             //git https URL. should point to the desired chaincode repo AND directory
 		
 		deployed_name: null   //[optional] this is the hashed name of a deployed chaincode.  if you want to run with chaincode that is already deployed set it now, else it will be set when you deploy with the sdk
 	};
@@ -467,7 +467,7 @@ I found it handy in niche cases, but it will probably be unhelpful to most devel
 				{
 					"query": []
 				},
-		"git_url": 'https://github.com/ibm-blockchain/marbles-chaincode/part2'
+		"git_url": 'https://github.com/ibm-blockchain/marbles-chaincode/part2_v1.0.0'
 		"peers": [{
 			"name": "vp1-xxx.xxx.xxx.xxx",
 			"api_host": "xxx.xxx.xxx.xxx",
@@ -481,7 +481,7 @@ I found it handy in niche cases, but it will probably be unhelpful to most devel
 			"enrollId": "user_type1_xxx",
 			"enrollSecret": "xxx"
 		}],
-		"unzip_dir": 'marbles-chaincode-master/part2',
+		"unzip_dir": 'marbles-chaincode-master/part2_v1.0.0',
 		"zip_url": 'https://github.com/ibm-blockchain/marbles-chaincode/archive/master.zip',
 		"options": {}
 		}

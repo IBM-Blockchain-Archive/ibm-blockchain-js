@@ -511,7 +511,7 @@ ibc.prototype.block_stats =  function(id, cb){
 //============================================================================================================================
 //read() - read generic variable from chaincode state - ! [legacy. do not use it anymore 4/1/2016]
 //============================================================================================================================
-function read(name, enrollId, cb){
+function read(args, enrollId, cb){
 	if(typeof enrollId === 'function'){ 									//if cb is in 2nd param use known enrollId
 		cb = enrollId;
 		enrollId = ibc.chaincode.details.peers[ibc.selectedPeer].enrollID;
@@ -531,7 +531,7 @@ function read(name, enrollId, cb){
 						},
 						ctorMsg: {
 							function: 'query',
-							args: [name]
+							args: args
 						},
 						secureContext: enrollId
 					}
@@ -556,7 +556,7 @@ ibc.prototype.register = function(index, enrollID, enrollSecret, maxRetry, cb) {
 };
 
 function register(index, enrollID, enrollSecret, maxRetry, attempt, cb){
-	console.log(maxRetry, '[ibc-js] Registering ', ibc.chaincode.details.peers[index].name, ' w/enrollID - ' + enrollID);
+	console.log('[ibc-js] Registering ', ibc.chaincode.details.peers[index].name, ' w/enrollID - ' + enrollID);
 	var options = {
 		path: '/registrar',
 		host: ibc.chaincode.details.peers[index].api_host,
