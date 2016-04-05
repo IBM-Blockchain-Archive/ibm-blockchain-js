@@ -85,7 +85,7 @@ npm install ibm-blockchain-js
 	
 	// Step 4 ==================================
 		if(cc.details.deployed_name === ""){				//decide if I need to deploy or not
-			cc.deploy('init', ['99'], './cc_summaries', cb_deployed);
+			cc.deploy('init', ['99'], null, cb_deployed);
 		}
 		else{
 			console.log('chaincode summary file indicates chaincode has been previously deployed');
@@ -167,7 +167,7 @@ It will run in order:
 1. ibc.load_chaincode(options.chaincode, [callback]) 
 1. callback(err, cc) 
 
-Options Parameter:
+Ex:
 
 ```js
 	var options = 	{
@@ -184,7 +184,8 @@ Options Parameter:
 			}],
 			options: {            //this is optional, gets passed to ibc.network(peers, options);
 				quiet: true, 
-				timeout: 60000
+				timeout: 60000,
+				tls: false
 			}
 		},
 		chaincode:{
@@ -195,6 +196,10 @@ Options Parameter:
 			deployed_name: null    //[optional] this is the hashed name of a deployed chaincode.  if you want to run with chaincode that is already deployed set it now, else it will be set when you deploy with the sdk
 		}
 	};
+	
+	ibc.load(options, function(err, data){
+		//callback here
+	});
 ```
 
 ### ibc.load_chaincode(options, [callback])
@@ -204,8 +209,8 @@ The callback will receive (e, obj) where `e` is the error format and `obj` is th
 "e" is null when there are no errors.
 The chaincode object will have dot notation to the functions in the your chaincode. 
 
-Example
-	
+Ex:
+
 ```js
 	var options = 	{
 		zip_url: 'https://github.com/ibm-blockchain/marbles-chaincode/archive/master.zip', //http/https of a link to download zip
@@ -224,6 +229,7 @@ The optional options parameter should be an object with the field `quiet` and/or
 - quiet = boolean - when true will print out only minimal HTTP debug information. Defaults `true`.
 - timeout = integer - time in ms to wait for a http response. Defaults `60000`.
 - tls = boolean - when `false` will use HTTP instead of HTTPS. Defaults `true`.
+
 Ex:
 
 ```js
@@ -288,7 +294,7 @@ Ex:
 	});
 ```
 
-Example Block Stats:
+Example Response:
 
 ```js
 	{
@@ -319,7 +325,7 @@ Example Block Stats:
 The SDK will default to use peer[0].  This function will switch the default peer to another index.  
 
 Ex:
-	
+
 ```js
 	ibc.switchPeer(2);
 ```
@@ -332,8 +338,9 @@ If successful, the peer will now use this `enrollID` to perform any http request
 - enrollID = string - name of secure context username.
 - enrollSecret = string - password/secret/api key of secure context user.
 - maxRetry = integer - number of times to retry this call before giving up.
+
 Ex:
-	
+
 ```js
 	ibc.register(3, 'user1', 'xxxxxx', 3, my_cb);
 ```
@@ -380,17 +387,39 @@ Options are
 - save_path = save the [Chaincode Summary File](#ccsf) to 'save_path'. 
 - delay_ms = time in milliseconds to postpone the callback after deploy. Default is `40000`
 
+Ex:
+
+```js
+	chaincode.deploy('init', ['99'], null, cb_deployed);
+```
+
 ### chaincode.query.CUSTOM_FUNCTION_NAME(args, [username], [callback])
 Will invoke your Go function CUSTOM_FUNCTION_NAME and pass it `args`. 
 Usually `args` is an array of strings.
 The `username` parameter should be the desired secure context username that has already been registered against the selected peer. 
 If left `null` the SDK will use a known username for the selected peer. (this is only relevant in a permissioned network)
 
+Ex:
+
+```js
+	chaincode.query.read(['abc'], function(err, data){
+		console.log('read abc:', data, err);
+	});
+```
+
 ### chaincode.invoke.CUSTOM_FUNCTION_NAME(args, [username], [callback])
 Will query your Go function CUSTOM_FUNCTION_NAME and pass it `args`. 
 Usually `args` is an array of strings.
 The `username` parameter should be the desired secure context username that has already been registered against the selected peer. 
 If left `null` the SDK will use a known username for the selected peer. (this is only relevant in a permissioned network)
+
+Ex:
+
+```js
+	chaincode.invoke.init_marbles([args], function(err, data){
+		console.log('create marble response:', data, err);
+	});
+```
 
 ### chaincode.query.read(name, [username], [callback]) *depreciated 4/1/2016*
 *This function is only here to help people transition from ibc v0.0.x to v1.x.x.*
