@@ -56,8 +56,8 @@ npm install ibm-blockchain-js
 			peers:   [{
 				"api_host": "xxx.xxx.xxx.xxx",
 				"api_port": "xxxxx",
-				"id": "xxxxxx-xxxx-xxx-xxx-xxxxxxxxxxxx_vpx",
-				"api_url": "http://xxx.xxx.xxx.xxx:xxxxx"
+				"api_port_tls": "xxx",
+				"id": "xxxxxx-xxxx-xxx-xxx-xxxxxxxxxxxx_vpx"
 			}],
 			users:  [{
 				"username": "user1",
@@ -175,8 +175,8 @@ Ex:
 			peers:   [{
 				"api_host": "xxx.xxx.xxx.xxx",
 				"api_port": "xxxxx",
-				"api_url": "http://xxx.xxx.xxx.xxx:xxxxx"
-				"id": "xxxxxx-xxxx-xxx-xxx-xxxxxxxxxxxx_vpx",
+				"api_port_tls": "xxx",
+				"id": "xxxxxx-xxxx-xxx-xxx-xxxxxxxxxxxx_vpx"
 			}],
 			users:  [{
 				"username": "user1",
@@ -237,8 +237,8 @@ Ex:
 		{
 			"api_host": "xxx.xxx.xxx.xxx",
 			"api_port": "xxxxx",
-			"id": "xxxxxx-xxxx-xxx-xxx-xxxxxxxxxxxx_vpx",
-			"api_url": "http://xxx.xxx.xxx.xxx:xxxxx"
+			"api_port_tls": "xxx",
+			"id": "xxxxxx-xxxx-xxx-xxx-xxxxxxxxxxxx_vpx"
 		}
 	]
 	ibc.network(peers, {quiet: false, timeout: 120000});
@@ -383,14 +383,15 @@ Call GoLang function named 'func' and feed it 'args'.
 Usually "args" is an array of strings.
 The `username` parameter should be the desired secure context username that has already been registered against the selected peer. 
 If left `null` the SDK will use a known username for the selected peer. (this is only relevant in a permissioned network)
-Options are 
+
+Options: 
 - save_path = save the [Chaincode Summary File](#ccsf) to 'save_path'. 
 - delay_ms = time in milliseconds to postpone the callback after deploy. Default is `40000`
 
 Ex:
 
 ```js
-	chaincode.deploy('init', ['99'], null, cb_deployed);
+	chaincode.deploy('init', ['99'], {delay_ms: 60000}, cb_deployed);
 ```
 
 ### chaincode.query.CUSTOM_FUNCTION_NAME(args, [username], [callback])
