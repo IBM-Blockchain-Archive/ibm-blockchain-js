@@ -47,23 +47,19 @@ test('Was the load_chaincode sucessful', function (t) {
 	function cb_ready(err, cc){
 	//response has chaincode functions
 	
-	t.error(err, 'There were no errors');
+		t.error(err, 'There were no errors');
 
 	// if the deployed name is blank, then chaincode has not been deployed
-	if(cc.details.deployed_name === ""){ 
-        cc.deploy('init', ['99'], './cc_summaries', cb_deployed);
-        function cb_deployed(err){
-			t.error(err, 'There were no errors');
-			console.log('sdk has deployed code and waited');
-			t.end();
-		}; //end test
-			
-  	} 
-  	else{
-  		console.log('chaincode summary file indicates chaincode has been previously deployed');
-		t.end();
-		
-		
-	};
-}
+		if(cc.details.deployed_name === ""){ 
+        	cc.deploy('init', ['99'], './cc_summaries', cb_deployed);
+        	function cb_deployed(err){
+				t.error(err, 'There were no errors');
+				console.log('sdk has deployed code and waited');
+			};	
+  		} 
+  		else{
+  			console.log('chaincode summary file indicates chaincode has been previously deployed');	
+		};
+	}
+	t.end();
 });

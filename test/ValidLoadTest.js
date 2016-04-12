@@ -43,8 +43,9 @@ test('Was the load_chaincode sucessful', function (t) {
 		});  // End of the Valid Load Test
 	}
 	else {
-		t.throws(ibc.load_chaincode(options, function cb_ready(err, cc)) {}, 
-			"Utils.Errors.INVALID_FORMAT;", "Invalid Options Caught!");
-	}
+        ibc.load_chaincode(options, function cb_ready(err, cc) {
+            t.equal(err, 'Invalid or unsupported zip format. No END header found', 'The error message was unexpected.')
+        })        
+    }
 	t.end();  //End Testing
 });

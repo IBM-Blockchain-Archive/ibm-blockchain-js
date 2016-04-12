@@ -195,7 +195,15 @@ ibc.prototype.load_chaincode = function(options, cb) {
 	// Step 1.
 	function cb_downloaded(){
 		console.log('[ibc-js] Unzipping zip');
-		var zip = new AdmZip(zip_dest);
+		try
+        {
+            var zip = new AdmZip(zip_dest);
+        }
+        catch (err)
+        {
+            cb(err, null);
+            return;
+        }
 		zip.extractAllTo(unzip_dest, /*overwrite*/true);
 		console.log('[ibc-js] Unzip done');
 		fs.readdir(unzip_cc_dest, cb_got_names);
