@@ -736,7 +736,7 @@ function deploy(func, args, deploy_options, enrollId, cb){
 						},
 						secureContext: enrollId
 					},
-					id: 11100010
+					id: Date.now()
 				};
 	}
 	else{
@@ -755,7 +755,8 @@ function deploy(func, args, deploy_options, enrollId, cb){
 	}
 	//console.log('!body', body);
 	options.success = function(statusCode, data){
-		ibc.chaincode.details.deployed_name = data.message;
+		if(data.result && ibc.chaincode.details.version.indexOf('hyperledger/fabric/core/chaincode/shim') >= 0) ibc.chaincode.details.deployed_name = data.result.message;
+		else ibc.chaincode.details.deployed_name = data.message;
 		ibc.prototype.save(tempDirectory);										//save it so we remember we have deployed
 		if(deploy_options && deploy_options.save_path != null) ibc.prototype.save(deploy_options.save_path);
 		if(cb){
@@ -882,7 +883,7 @@ function build_invoke_func(name){
 								},
 								secureContext: enrollId
 							},
-							id: 11100010
+							id: Date.now()
 						};
 			}
 			else{
@@ -953,7 +954,7 @@ function build_query_func(name){
 								},
 								secureContext: enrollId
 							},
-							id: 11100010
+							id: Date.now()
 						};
 			}
 			else{
