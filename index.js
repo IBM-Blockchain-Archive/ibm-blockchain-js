@@ -32,12 +32,13 @@ ibc.chaincode = {																	//init it all
 			query: []
 		},
 		git_url: '',
+		options: {},
 		peers: [],
 		timestamp: 0,
 		users: [],
 		unzip_dir: '',
+		version: '',
 		zip_url: '',
-		options: {}
 	}
 };
 ibc.selectedPeer = 0;
@@ -79,12 +80,13 @@ ibc.prototype.load = function(options, cb){
 									query: []
 								},
 								git_url: '',
+								options: options.network.options,
 								peers: [],
 								timestamp: 0,
 								users: [],
 								unzip_dir: '',
+								version: '',
 								zip_url: '',
-								options: options.network.options
 					}
 				};
 
@@ -130,12 +132,16 @@ ibc.prototype.load = function(options, cb){
 // 0. Load the github or zip
 // 1. Unzip & scan directory for files
 // 2. Iter over go files
-// 		2a. Find the boundaries for Run() in the cc
-//		2b. Grab function names that need to be exported
-//		2c. Create JS invoke functions for golang functions
-// 		2d. Find the boundaries for Query() in the cc
-//		2e. Grab function names that need to be exported
-//		2f. Create JS query functions for golang functions
+//		2a. Find what shim version
+// 		2b. Find the boundaries for Invoke() in the cc
+//			2c. Grab function names that need to be exported
+//			2d. Create JS invoke functions for golang functions
+// 		2e. Find the boundaries for Query() in the cc
+//			2f. Grab function names that need to be exported
+//			2g. Create JS query functions for golang functions
+// 		2h. Find the boundaries for Init() in the cc
+//			2i. Grab function names that need to be exported
+//			2j. Create JS init functions for golang functions
 // 3. Call callback()
 // ============================================================================================================================
 ibc.prototype.load_chaincode = function(options, cb) {
@@ -149,8 +155,8 @@ ibc.prototype.load_chaincode = function(options, cb) {
 		return;																			//get out of dodge
 	}
 
-	var go_funcs = [], cc_suspects = [], cc_invocations = [], cc_queries = [];
-	var found_query = false, found_run = false;
+	var go_funcs = [], cc_suspects = [], cc_invocations = [], cc_queries = [], cc_inits = [];
+	var found_query = false, found_invoke = false;
 	var zip_dest = path.join(tempDirectory,  '/file.zip');								//	=./temp/file.zip
 	var unzip_dest = path.join(tempDirectory,  '/unzip');								//	=./temp/unzip
 	var unzip_cc_dest = path.join(unzip_dest, '/', options.unzip_dir);					//	=./temp/unzip/DIRECTORY
@@ -223,11 +229,16 @@ ibc.prototype.load_chaincode = function(options, cb) {
 		else{
 			for(var i in obj){
 				if(obj[i].indexOf('.go') >= 0){											//look for GoLang files
-					if(!found_run || !found_query){
+					if(!found_invoke || !found_query){
 						foundGo = true;
 						var file = fs.readFileSync(path.join(unzip_cc_dest, obj[i]), 'utf8');
-						parse_for_invoke(obj[i], file);
-						parse_for_query(obj[i], file);
+						
+						ibc.chaincode.details.version = find_shim(file);
+						if(ibc.chaincode.details.version !== ''){						//we can't search for functions until we identify the shim version
+							parse_for_invoke(obj[i], file);
+							parse_for_query(obj[i], file);
+							parse_for_init(obj[i], file);
+						}
 					}
 				}
 			}
@@ -242,14 +253,14 @@ ibc.prototype.load_chaincode = function(options, cb) {
 		}
 		else{
 			
-			if(!found_run){																//warning no run/invoke functions
-				msg = 'did not find any invoke functions in chaincode\'s "Run()"';
-				console.log('! [ibc-js] Warning -', msg);
+			if(!found_invoke){															//warning no run/invoke functions
+				console.log('! [ibc-js] Warning - did not find any invoke functions in chaincode\'s "Invoke()", building a generic "invoke"');
+				build_invoke_func('invoke');											//this will make chaincode.invoke.invokce(args)
 			}
 			
 			if(!found_query){															//warning no query functions
-				msg = 'did not find any query functions in chaincode\'s "Query()"';
-				console.log('! [ibc-js] Warning -', msg);
+				console.log('! [ibc-js] Warning - did not find any query functions in chaincode\'s "Query()", building a generic "query"');
+				build_query_func('query');												//this will make chaincode.query.query(args)
 			}
 
 			// Step 3.																	success!
@@ -259,7 +270,25 @@ ibc.prototype.load_chaincode = function(options, cb) {
 			if(cb) return cb(null, ibc.chaincode);										//all done, send it to callback
 		}
 	}
+	
+	//regex to find the shim version for this chaincode
+	function find_shim(file){
+		var ret = '';
+		if(file == null) console.log('! [ibc-js] fs readfile Error');
+		else{
+			console.log('[ibc-js] Parsing file for shim version');
+			
+			var shim_regex = /github.com\/\S+\/shim/g;					//find chaincode's shim version
+			var result = file.match(shim_regex);
+			if(result[0]){
+				console.log('[ibc-js] Found shim version:', result[0]);
+				ret = result[0];
+			}
+		}
+		return ret;
+	}
 
+	//look for Invokes
 	function parse_for_invoke(name, str){
 		if(str == null) console.log('! [ibc-js] fs readfile Error');
 		else{
@@ -271,13 +300,15 @@ ibc.prototype.load_chaincode = function(options, cb) {
 			while ( (result = go_func_regex.exec(str)) ) {
 				go_funcs.push({name: result[1], pos: result.index});
 			}
-			
 			var i_start = 0;
 			var i_stop = 0;
+			var invokeFunctionName = 'Run';												//use Run for obc peer adn Invoke for hyperledger
+			if(ibc.chaincode.details.version.indexOf('hyperledger/fabric/core/chaincode/shim') >= 0) invokeFunctionName = 'Invoke';
+			
 			for(var i in go_funcs){
-				if(go_funcs[i].name.toLowerCase() === 'run'){
-					i_start = go_funcs[i].pos;											//find start and stop positions around the "Run()" function
-					if(go_funcs[Number(i) + 1] == null) i_stop = i_start * 2;			//run is the last function.. so uhhhh just make up a high number
+				if(go_funcs[i].name === invokeFunctionName){
+					i_start = go_funcs[i].pos;											//find start and stop positions around the "Invoke()" function
+					if(go_funcs[Number(i) + 1] == null) i_stop = i_start * 2;			//invoke is the last function.. so uhhhh just make up a high number
 					else i_stop = go_funcs[Number(i) + 1].pos;
 					break;
 				}
@@ -285,17 +316,17 @@ ibc.prototype.load_chaincode = function(options, cb) {
 			
 			if(i_start > 0 && i_stop > 0){
 				// Step 2b.
-				var regex = /function\s+==\s+["'](\w+)["']/g;							//find the exposed chaincode functions in "Run()""
+				var regex = /function\s+==\s+["'](\w+)["']/g;							//find the exposed chaincode functions in "Invoke()""
 				var result2;
 				while ( (result2 = regex.exec(str)) ) {
-					cc_suspects.push({name: result2[1], index: result2.index});			//store this for when parsing query which runs next
-					if(result2.index > i_start && result2.index < i_stop){				//make sure its inside Run()
-						cc_invocations.push(result2[1]);
+					cc_suspects.push({name: result2[1], index: result2.index});			//store this for future parsing like query & init
+					if(result2.index > i_start && result2.index < i_stop){				//make sure its inside Invoke()
+						cc_invocations.push(result2[1]);								//build a list of function names
 					}
 				}
 			
 				if(cc_invocations.length > 0){
-					found_run = true;
+					found_invoke = true;
 				
 					// Step 2c.
 					ibc.chaincode.details.func.invoke = [];
@@ -306,7 +337,8 @@ ibc.prototype.load_chaincode = function(options, cb) {
 			}
 		}
 	}
-		
+	
+	//look for Queries
 	function parse_for_query(name, str){
 		if(str == null) console.log('! [ibc-js] fs readfile Error');
 		else{
@@ -316,7 +348,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 			var q_start = 0;
 			var q_stop = 0;
 			for(var i in go_funcs){
-				if(go_funcs[i].name.toLowerCase() === 'query'){
+				if(go_funcs[i].name === 'Query'){
 					q_start = go_funcs[i].pos;											//find start and stop positions around the "Query()" function
 					if(go_funcs[Number(i) + 1] == null) q_stop = q_start * 2;			//query is the last function.. so uhhhh just make up a high number
 					else q_stop = go_funcs[Number(i) + 1].pos;
@@ -328,7 +360,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 				// Step 2b.
 				for(i in cc_suspects){
 					if(cc_suspects[i].index > q_start && cc_suspects[i].index < q_stop){//make sure its inside Query()
-						cc_queries.push(cc_suspects[i].name);
+						cc_queries.push(cc_suspects[i].name);							//build a list of function names
 					}
 				}
 			
@@ -339,6 +371,44 @@ ibc.prototype.load_chaincode = function(options, cb) {
 					ibc.chaincode.details.func.query = [];
 					for(i in cc_queries){												//build the rest call for each function
 						build_query_func(cc_queries[i]);
+					}
+				}
+			}
+		}
+	}
+	
+	//look for Inits
+	function parse_for_init(name, str){
+		if(str == null) console.log('! [ibc-js] fs readfile Error');
+		else{
+			//console.log('[ibc-js] Parsing file for init functions -', name);
+			
+			// Step 2a.
+			var q_start = 0;
+			var q_stop = 0;
+			for(var i in go_funcs){
+				if(go_funcs[i].name === 'Init'){
+					q_start = go_funcs[i].pos;											//find start and stop positions around the "Init()" function
+					if(go_funcs[Number(i) + 1] == null) q_stop = q_start * 2;			//init is the last function.. so uhhhh just make up a high number
+					else q_stop = go_funcs[Number(i) + 1].pos;
+					break;
+				}
+			}
+			
+			if(q_start > 0 && q_stop > 0){
+				// Step 2b.
+				for(i in cc_suspects){
+					if(cc_suspects[i].index > q_start && cc_suspects[i].index < q_stop){//make sure its inside Init()
+						cc_inits.push(cc_suspects[i].name);								//build a list of function names
+					}
+				}
+			
+				if(cc_inits.length > 0){
+				
+					// Step 2c.
+					ibc.chaincode.details.func.init = [];
+					for(i in cc_inits){													//no rest call to build, just remember it in 'details'
+						ibc.chaincode.details.func.init.push(name);
 					}
 				}
 			}
@@ -649,8 +719,30 @@ function deploy(func, args, deploy_options, enrollId, cb){
 	console.log('[ibc-js] Deploy Chaincode - Starting');
 	console.log('[ibc-js] \tfunction:', func, ', arg:', args);
 	console.log('\n\n\t Waiting...');											//this can take awhile
-	var options = {path: '/devops/deploy'};
-	var body = 	{
+	
+	var options = {}, body = {};
+	if(ibc.chaincode.details.version.indexOf('hyperledger/fabric/core/chaincode/shim') >= 0){
+		options = {path: '/chaincode'};
+		body = 	{
+					jsonrpc: '2.0',
+					method: 'deploy',
+					params: {
+						type: 1,
+						chaincodeID:{
+							path: ibc.chaincode.details.git_url
+						},
+						ctorMsg: {
+							function: func,
+							args: args
+						},
+						secureContext: enrollId
+					},
+					id: 11100010
+				};
+	}
+	else{
+		options = {path: '/devops/deploy'};
+		body = 	{
 					type: 'GOLANG',
 					chaincodeID: {
 							path: ibc.chaincode.details.git_url
@@ -661,6 +753,7 @@ function deploy(func, args, deploy_options, enrollId, cb){
 					},
 					secureContext: enrollId
 				};
+	}
 	//console.log('!body', body);
 	options.success = function(statusCode, data){
 		ibc.chaincode.details.deployed_name = data.message;
@@ -773,8 +866,29 @@ function build_invoke_func(name){
 				enrollId = ibc.chaincode.details.peers[ibc.selectedPeer].enrollID;
 			}
 
-			var options = {path: '/devops/invoke'};
-			var body = {
+			var options = {}, body = {};
+			if(ibc.chaincode.details.version.indexOf('hyperledger/fabric/core/chaincode/shim') >= 0){
+				options = {path: '/chaincode'};
+				body = {
+							jsonrpc: '2.0',
+							method: 'invoke',
+							params: {
+								type: 1,
+								chaincodeID:{
+									name: ibc.chaincode.details.deployed_name
+								},
+								ctorMsg: {
+									function: 'invoke',
+									args: args
+								},
+								secureContext: enrollId
+							},
+							id: 11100010
+						};
+			}
+			else{
+				options = {path: '/devops/invoke'};
+				body = {
 							chaincodeSpec: {
 								type: 'GOLANG',
 								chaincodeID: {
@@ -787,7 +901,8 @@ function build_invoke_func(name){
 								secureContext: enrollId
 							}
 						};
-
+			}
+			
 			options.success = function(statusCode, data){
 				console.log('[ibc-js]', name, ' - success:', data);
 				ibc.q.push(Date.now());												//new action, add it to queue
@@ -820,9 +935,31 @@ function build_query_func(name){
 			if(enrollId == null) {													//if enrollId not provided, use known valid one
 				enrollId = ibc.chaincode.details.peers[ibc.selectedPeer].enrollID;
 			}
+			
+			var options = {}, body = {};
 
-			var options = {path: '/devops/query'};
-			var body = {
+			if(ibc.chaincode.details.version.indexOf('hyperledger/fabric/core/chaincode/shim') >= 0){
+				options = {path: '/chaincode'};
+				body = {
+							jsonrpc: '2.0',
+							method: 'query',
+							params: {
+								type: 1,
+								chaincodeID:{
+									name: ibc.chaincode.details.deployed_name
+								},
+								ctorMsg: {
+									function: 'query',
+									args: args
+								},
+								secureContext: enrollId
+							},
+							id: 11100010
+						};
+			}
+			else{
+				options = {path: '/devops/query'};
+				body = {
 							chaincodeSpec: {
 								type: 'GOLANG',
 								chaincodeID: {
@@ -835,6 +972,7 @@ function build_query_func(name){
 								secureContext: enrollId
 							}
 						};
+			}
 
 			options.success = function(statusCode, data){
 				console.log('[ibc-js]', name, ' - success:', data);
@@ -842,7 +980,7 @@ function build_query_func(name){
 			};
 			options.failure = function(statusCode, e){
 				console.log('[ibc-js]', name, ' - failure:', statusCode, e);
-				if(cb) cb(helper.eFmt('invoke() error', statusCode, e), null);
+				if(cb) cb(helper.eFmt('query() error', statusCode, e), null);
 			};
 			rest.post(options, '', body);
 		};
