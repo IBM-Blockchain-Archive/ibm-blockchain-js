@@ -140,8 +140,7 @@ ibc.prototype.load = function(options, cb){
 //			2f. Grab function names that need to be exported
 //			2g. Create JS query functions for golang functions
 // 		2h. Find the boundaries for Init() in the cc
-//			2i. Grab function names that need to be exported
-//			2j. Create JS init functions for golang functions
+//			2i. Record function names that need to be exported
 // 3. Call callback()
 // ============================================================================================================================
 ibc.prototype.load_chaincode = function(options, cb) {
@@ -233,6 +232,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 						foundGo = true;
 						var file = fs.readFileSync(path.join(unzip_cc_dest, obj[i]), 'utf8');
 						
+						// Step 2a.
 						ibc.chaincode.details.version = find_shim(file);
 						if(ibc.chaincode.details.version !== ''){						//we can't search for functions until we identify the shim version
 							parse_for_invoke(obj[i], file);
@@ -315,7 +315,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 			}
 			
 			if(i_start > 0 && i_stop > 0){
-				// Step 2b.
+				// Step 2c.
 				var regex = /function\s+==\s+["'](\w+)["']/g;							//find the exposed chaincode functions in "Invoke()""
 				var result2;
 				while ( (result2 = regex.exec(str)) ) {
@@ -328,7 +328,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 				if(cc_invocations.length > 0){
 					found_invoke = true;
 				
-					// Step 2c.
+					// Step 2d.
 					ibc.chaincode.details.func.invoke = [];
 					for(i in cc_invocations){											//build the rest call for each function
 						build_invoke_func(cc_invocations[i]);
@@ -344,7 +344,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 		else{
 			console.log('[ibc-js] Parsing file for query functions -', name);
 			
-			// Step 2a.
+			// Step 2e.
 			var q_start = 0;
 			var q_stop = 0;
 			for(var i in go_funcs){
@@ -357,7 +357,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 			}
 			
 			if(q_start > 0 && q_stop > 0){
-				// Step 2b.
+				// Step 2f.
 				for(i in cc_suspects){
 					if(cc_suspects[i].index > q_start && cc_suspects[i].index < q_stop){//make sure its inside Query()
 						cc_queries.push(cc_suspects[i].name);							//build a list of function names
@@ -367,7 +367,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 				if(cc_queries.length > 0){
 					found_query = true;
 				
-					// Step 2c.
+					// Step 2g.
 					ibc.chaincode.details.func.query = [];
 					for(i in cc_queries){												//build the rest call for each function
 						build_query_func(cc_queries[i]);
@@ -383,7 +383,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 		else{
 			//console.log('[ibc-js] Parsing file for init functions -', name);
 			
-			// Step 2a.
+			// Step 2h.
 			var q_start = 0;
 			var q_stop = 0;
 			for(var i in go_funcs){
@@ -396,7 +396,6 @@ ibc.prototype.load_chaincode = function(options, cb) {
 			}
 			
 			if(q_start > 0 && q_stop > 0){
-				// Step 2b.
 				for(i in cc_suspects){
 					if(cc_suspects[i].index > q_start && cc_suspects[i].index < q_stop){//make sure its inside Init()
 						cc_inits.push(cc_suspects[i].name);								//build a list of function names
@@ -405,7 +404,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 			
 				if(cc_inits.length > 0){
 				
-					// Step 2c.
+					// Step 2i.
 					ibc.chaincode.details.func.init = [];
 					for(i in cc_inits){													//no rest call to build, just remember it in 'details'
 						ibc.chaincode.details.func.init.push(name);
