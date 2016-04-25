@@ -878,7 +878,7 @@ function build_invoke_func(name){
 									name: ibc.chaincode.details.deployed_name
 								},
 								ctorMsg: {
-									function: 'invoke',
+									function: name,
 									args: args
 								},
 								secureContext: enrollId
@@ -949,7 +949,7 @@ function build_query_func(name){
 									name: ibc.chaincode.details.deployed_name
 								},
 								ctorMsg: {
-									function: 'query',
+									function: name,
 									args: args
 								},
 								secureContext: enrollId
@@ -973,10 +973,13 @@ function build_query_func(name){
 							}
 						};
 			}
-
+			
 			options.success = function(statusCode, data){
 				console.log('[ibc-js]', name, ' - success:', data);
-				if(cb) cb(null, data.OK);
+				if(cb){
+					if(data && data.result) cb(null, data.result.message);
+					else cb(null, data.OK);
+				}
 			};
 			options.failure = function(statusCode, e){
 				console.log('[ibc-js]', name, ' - failure:', statusCode, e);
