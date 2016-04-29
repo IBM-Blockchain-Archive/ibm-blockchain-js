@@ -213,8 +213,13 @@ ibc.prototype.load_chaincode = function(options, cb) {
 	// Step 1.
 	function cb_downloaded(){
 		console.log('[ibc-js] Unzipping zip');
-		var zip = new AdmZip(zip_dest);
-		zip.extractAllTo(unzip_dest, /*overwrite*/true);
+		try{
+			var zip = new AdmZip(zip_dest);
+			zip.extractAllTo(unzip_dest, /*overwrite*/true);
+		}
+		catch (err){
+			return cb(helper.eFmt('download repo error', 400, err), null);
+		}
 		console.log('[ibc-js] Unzip done');
 		fs.readdir(unzip_cc_dest, cb_got_names);
 		fs.unlink(zip_dest, function(err) {});											//remove zip file, never used again

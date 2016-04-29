@@ -1,7 +1,6 @@
 // Function testing the SDK
 // This file contains the most recent tests still being developed.
-
-console.log("Now starting SDKFunctiontest.js");
+console.log("Now starting cb_readyTeats.js");
 
 // Starting out by requiring all dependancies
 var test = require('tape');
@@ -18,8 +17,7 @@ var options = {
 	// Create a network on Bluemix Experimental BlockChain offering
 	// Service Credentials are found under the Blockchain instance tab.
 	
-	network:{ 
-		peers: [{
+	network:{ peers: [{
 		"api_host": "3f3fa6c3-a8b4-48b2-95bc-63b5058fa333_vp1-api.blockchain.ibm.com",
 		"api_port": "80",
 		"id": "3f3fa6c3-a8b4-48b2-95bc-63b5058fa333_vp1", 
@@ -40,29 +38,28 @@ var options = {
     } 
 };
 
-
+test('Was the load_chaincode sucessful', function (t) {
 // Load the Marbles2 chaincode, with defined options, and return call-back-when-ready function.
-ibc.load(options, cb_ready);
+	ibc.load(options, cb_ready);
 
-// Define the call-back-when-ready function returned above
-// call-back-when-ready function has err
-function cb_ready(err, cc){
+	// Define the call-back-when-ready function returned above
+	// call-back-when-ready function has err
+	function cb_ready(err, cc){
 	//response has chaincode functions
 	
+		t.error(err, 'There were no errors');
+
 	// if the deployed name is blank, then chaincode has not been deployed
-	if(cc.details.deployed_name === ""){
-        cc.deploy('init', ['99'], './cc_summaries', cb_deployed);
-        function cb_deployed(err){
-			console.log('sdk has deployed code and waited');
+		if(cc.details.deployed_name === ""){ 
+        	cc.deploy('init', ['99'], './cc_summaries', cb_deployed);
+        	function cb_deployed(err){
+				t.error(err, 'There were no errors');
+				console.log('sdk has deployed code and waited');
+			};	
   		} 
-  	}
-  	else{
-  		console.log('chaincode summary file indicates chaincode has been previously deployed');
+  		else{
+  			console.log('chaincode summary file indicates chaincode has been previously deployed');	
+		};
 	}
-};
-
-ibc.chain_stats([stats_callback]);
-function stats_callback(e, stats){ 
-	console.log('got some stats', stats);
-}
-
+	t.end();
+});
