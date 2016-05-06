@@ -45,7 +45,7 @@ npm install ibm-blockchain-js
 ```js
 	// Step 1 ==================================
 	var Ibc1 = require('ibm-blockchain-js');
-	var ibc = new Ibc1();
+	var ibc = new Ibc1(/*logger*/);             //you can pass a logger such as winston here - optional
 	var chaincode = {};
 
 	// ==================================
@@ -153,6 +153,27 @@ Examples:
 ***
 
 ## <a name="ibcjs"></a>IBM-Blockchain-JS Documentation
+### Usage
+
+Example with standard console logging:
+```js
+	var Ibc1 = require('ibm-blockchain-js');
+	var ibc = new Ibc1();
+```
+
+Example with [Winston](https://www.npmjs.com/package/winston) logging:
+```js
+	var winston = require('winston');
+	var logger = new (winston.Logger)({
+		transports: [
+		new (winston.transports.Console)(),
+		new (winston.transports.File)({ filename: 'somefile.log' })
+		]
+	});
+	var Ibc1 = require('ibm-blockchain-js');
+	var ibc = new Ibc1(logger);             //you can pass a logger such as winston here - optional
+```
+
 ### ibc.load(options, [callback])
 This is a function that wraps a typical startup using a standard Bluemix IBM Blockchain network. 
 Take a look at how this function works, especially how it uses the register() function. 
