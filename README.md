@@ -539,17 +539,29 @@ I found it handy in niche cases, but it will probably be unhelpful to most devel
 	}
 ```
 
-
-
 #FAQ
-- *ibc.load() appears to ignore all of my users for secure context. Then it complains it found "No membership users" and never registers with a Peer!*
 
-Correct behavior of `ibc.load()` is to remove any enrollIDs that do not contain 'type_1' in their name. 
+*ibc.load() appears to ignore all of my users for secure context. Then it complains it found "No membership users" and never registers with a Peer!*
+
+- Correct behavior of `ibc.load()` is to remove any enrollIDs that do not contain 'type_1' in their name. 
 This is to conform to the OBC Peer spec of what enrollIDs a dev's app should use. 
 If this is not applicable for your network (ie you have a custom IBM Blockchain network) you can easily create your own version of `ibc.load()` for your needs. 
 I would copy the code found in `ibc.load()` then modify it to fit your own needs. 
 Everything important that `ibc.load()` calls is exposed in this module. 
 
-- *Do you have any examples that use this?*
+*Do you have any examples that use this?*
 
-Yes! Head over to the [Marbles Node.js Demo](https://github.com/IBM-Blockchain/marbles)
+- Yes! Head over to the [Marbles Node.js Demo](https://github.com/IBM-Blockchain/marbles)
+
+*How exactly do I write chaincode?*
+
+- We have a "hello world" like tutorial for chaincode over at [Learn Chaincode](https://github.com/IBM-Blockchain/learn-chaincode)
+
+*I'm getting error code 2 in my deploy response?*
+
+- Your chaincode has build issues and is not compiling. Manually build it in your local machine to get details.
+
+*I'm getting error code 1!*
+
+- The shim version your chaincode import has is not the same as the shim the peer is running. ie you are probably running 'Hyperledger' peer code and sending it chaincode with a shim pointing to "OBC-Peer". 
+
