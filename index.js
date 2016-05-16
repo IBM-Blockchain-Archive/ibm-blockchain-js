@@ -261,7 +261,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 		else{
 			
 			if(!found_invoke){															//warning no run/invoke functions
-				logger.wartn('! [ibc-js] Warning - did not find any invoke functions in chaincode\'s "Invoke()", building a generic "invoke"');
+				logger.warn('! [ibc-js] Warning - did not find any invoke functions in chaincode\'s "Invoke()", building a generic "invoke"');
 				build_invoke_func('invoke');											//this will make chaincode.invoke.invokce(args)
 			}
 			
