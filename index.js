@@ -768,6 +768,8 @@ function deploy(func, args, deploy_options, enrollId, cb){
 		}
 		else ibc.chaincode.details.deployed_name = data.message;												//obc-peer response
 		
+		if(ibc.chaincode.details.deployed_name.length < 32) ibc.chaincode.details.deployed_name = '';			//doesnt look right, let code below catch error
+
 		if(ibc.chaincode.details.deployed_name === ''){
 			logger.error('\n\n\t deploy resp error - there is no chaincode hash name in response:', data);
 			if(cb) cb(helper.eFmt('deploy() error no cc name', 502, data), null);
