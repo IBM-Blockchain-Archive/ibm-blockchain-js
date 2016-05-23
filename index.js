@@ -194,7 +194,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 	function download_it(download_url){
 		logger.log('[ibc-js] Downloading zip');
 		var file = fs.createWriteStream(zip_dest);
-		var handleResponse = function(response) {
+		var handleResponse = function(response) {										//download a .zip of the repo
 			response.pipe(file);
 			file.on('finish', function() {
 				if(response.headers.status === '302 Found'){
@@ -203,10 +203,10 @@ ibc.prototype.load_chaincode = function(options, cb) {
 					download_it(response.headers.location);
 				}
 				else{
-					file.close(cb_downloaded);  									//close() is async
+					file.close(cb_downloaded);  										//close() is async
 				}
 			});
-		}
+		};
 		var handleError = function(err) {
 			logger.error('! [ibc-js] Download error');
 			fs.unlink(zip_dest); 														//delete the file async
@@ -214,7 +214,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 		};
 
 		var protocol = download_url.split('://')[0];
-		if(protocol === 'https') {
+		if(protocol === 'https') {														//choose http or https
 			https.get(download_url, handleResponse).on('error', handleError);
 		}
 		else{
@@ -226,7 +226,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 	function cb_downloaded(){
 		logger.log('[ibc-js] Unzipping zip');
 		try{
-			var zip = new AdmZip(zip_dest);
+			var zip = new AdmZip(zip_dest);												//unzip the zip we downloaded
 			zip.extractAllTo(unzip_dest, /*overwrite*/true);
 		}
 		catch (err){
@@ -437,7 +437,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 // ============================================================================================================================
 ibc.prototype.network = function(arrayPeers, options){
 	var errors = [];
-	ibc.chaincode.details.options = {quiet: true, timeout: 60000, tls: true};		//defaults
+	ibc.chaincode.details.options = {quiet: true, timeout: 60000, tls: true};			//defaults
 	
 	if(!arrayPeers || arrayPeers.constructor !== Array) errors.push('network input arg should be array of peer objects');
 	
@@ -546,7 +546,6 @@ ibc.prototype.save =  function(dir, cb){
 				if(cb) cb(helper.eFmt('save() fs write error', 500, e), null);
 			}
 			else {
-				//logger.log(' - saved ', dest);
 				if(cb) cb(null, null);
 			}
 		});
@@ -598,11 +597,11 @@ ibc.prototype.block_stats =  function(id, cb){
 //read() - read generic variable from chaincode state - ! [legacy. do not use it anymore 4/1/2016]
 //============================================================================================================================
 function read(args, enrollId, cb){
-	if(typeof enrollId === 'function'){ 									//if cb is in 2nd param use known enrollId
+	if(typeof enrollId === 'function'){ 											//if cb is in 2nd param use known enrollId
 		cb = enrollId;
 		enrollId = ibc.chaincode.details.peers[ibc.selectedPeer].enrollID;
 	}
-	if(enrollId == null) {													//if enrollId not provided, use known valid one
+	if(enrollId == null) {															//if enrollId not provided, use known valid one
 		enrollId = ibc.chaincode.details.peers[ibc.selectedPeer].enrollID;
 	}
 
@@ -724,17 +723,17 @@ ibc.prototype.check_register = function(index, enrollID, cb) {
 //deploy() - deploy chaincode and call a cc function
 //============================================================================================================================
 function deploy(func, args, deploy_options, enrollId, cb){
-	if(typeof enrollId === 'function'){ 										//if cb is in 2nd param use known enrollId
+	if(typeof enrollId === 'function'){ 											//if cb is in 2nd param use known enrollId
 		cb = enrollId;
 		enrollId = ibc.chaincode.details.peers[ibc.selectedPeer].enrollID;
 	}
-	if(enrollId == null) {														//if enrollId not provided, use known valid one
+	if(enrollId == null) {															//if enrollId not provided, use known valid one
 		enrollId = ibc.chaincode.details.peers[ibc.selectedPeer].enrollID;
 	}
 
 	logger.log('[ibc-js] Deploy Chaincode - Starting');
 	logger.log('[ibc-js] \tfunction:', func, ', arg:', args);
-	logger.log('\n\n\t Waiting...');											//this can take awhile
+	logger.log('\n\n\t Waiting...');												//this can take awhile
 	
 	var options = {}, body = {};
 	if(ibc.chaincode.details.version.indexOf('hyperledger/fabric/core/chaincode/shim') >= 0){	//hyperledger body format
