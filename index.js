@@ -10,6 +10,7 @@
 //Load modules
 var fs = require('fs');
 var path = require('path');
+var http = require('http');
 var https = require('https');
 var async = require('async');
 var rest = require(__dirname + '/lib/rest.js');
@@ -193,7 +194,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 	function download_it(download_url){
 		logger.log('[ibc-js] Downloading zip');
 		var file = fs.createWriteStream(zip_dest);
-		https.get(download_url, function(response) {
+		var handleResponse = function(response) {
 			response.pipe(file);
 			file.on('finish', function() {
 				if(response.headers.status === '302 Found'){
@@ -202,14 +203,23 @@ ibc.prototype.load_chaincode = function(options, cb) {
 					download_it(response.headers.location);
 				}
 				else{
-					file.close(cb_downloaded);  										//close() is async
+					file.close(cb_downloaded);  									//close() is async
 				}
 			});
-		}).on('error', function(err) {
+		}
+		var handleError = function(err) {
 			logger.error('! [ibc-js] Download error');
 			fs.unlink(zip_dest); 														//delete the file async
 			if (cb) cb(helper.eFmt('doad_chaincode() download error', 500, err.message), ibc.chaincode);
-		});
+		};
+
+		var protocol = download_url.split('://')[0];
+		if(protocol === 'https') {
+			https.get(download_url, handleResponse).on('error', handleError);
+		}
+		else{
+			http.get(download_url, handleResponse).on('error', handleError);
+		}
 	}
 
 	// Step 1.
@@ -261,7 +271,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 		else{
 			
 			if(!found_invoke){															//warning no run/invoke functions
-				logger.wartn('! [ibc-js] Warning - did not find any invoke functions in chaincode\'s "Invoke()", building a generic "invoke"');
+				logger.warn('! [ibc-js] Warning - did not find any invoke functions in chaincode\'s "Invoke()", building a generic "invoke"');
 				build_invoke_func('invoke');											//this will make chaincode.invoke.invokce(args)
 			}
 			
