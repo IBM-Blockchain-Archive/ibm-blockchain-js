@@ -542,7 +542,7 @@ ibc.prototype.save =  function(dir, cb){
 		var dest = path.join(dir, fn);
 		fs.writeFile(dest, JSON.stringify({details: ibc.chaincode.details}), function(e){
 			if(e != null){
-				logger.error('[ibc-js] ibc.save() error', e);
+				logger.warn('[ibc-js] ibc.save() warning', e);
 				if(cb) cb(helper.eFmt('save() fs write error', 500, e), null);
 			}
 			else {
