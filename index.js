@@ -583,11 +583,11 @@ ibc.prototype.chain_stats =  function(cb){
 ibc.prototype.block_stats =  function(id, cb){
 	var options = {path: '/chain/blocks/' + id};									//i think block IDs start at 0, height starts at 1, fyi
 	options.success = function(statusCode, data){
-		logger.log('[ibc-js] Block Stats - success');
+		logger.log('[ibc-js] Block Stats ', id , '- success');
 		if(cb) cb(null, data);
 	};
 	options.failure = function(statusCode, e){
-		logger.error('[ibc-js] Block Stats - failure:', statusCode);
+		logger.error('[ibc-js] Block Stats ', id , '- failure:', statusCode);
 		if(cb) cb(helper.eFmt('block_stats() error', statusCode, e), null);
 	};
 	rest.get(options, '');
@@ -623,11 +623,15 @@ function read(args, enrollId, cb){
 				};
 	//logger.log('body', body);
 	options.success = function(statusCode, data){
-		logger.log('[ibc-js] Read - success:', data);
-		if(cb) cb(null, data.OK);
+		logger.log('[ibc-js] (Read) - success:', data);
+		if(cb){
+			if(data.error) cb(helper.eFmt('query() resp error', 400, data.error), null);
+			else if(data.result) cb(null, data.result.message);
+			else cb(null, data.OK);
+		}
 	};
 	options.failure = function(statusCode, e){
-		logger.error('[ibc-js] Read - failure:', statusCode);
+		logger.error('[ibc-js] (Read) - failure:', statusCode);
 		if(cb) cb(helper.eFmt('read() error', statusCode, e), null);
 	};
 	rest.post(options, '', body);
@@ -777,7 +781,9 @@ function deploy(func, args, deploy_options, enrollId, cb){
 		}
 		else ibc.chaincode.details.deployed_name = data.message;												//obc-peer response
 		
-		if(ibc.chaincode.details.deployed_name.length < 32) ibc.chaincode.details.deployed_name = '';			//doesnt look right, let code below catch error
+		if(!ibc.chaincode.details.deployed_name || ibc.chaincode.details.deployed_name.length < 32){
+			ibc.chaincode.details.deployed_name = '';								//doesnt look right, let code below catch error
+		}
 
 		if(ibc.chaincode.details.deployed_name === ''){
 			logger.error('\n\n\t deploy resp error - there is no chaincode hash name in response:', data);
@@ -1011,7 +1017,8 @@ function build_query_func(name){
 				logger.log('[ibc-js]', name, ' - success:', data);
 				if(cb){
 					if(data){
-						if(data.result) cb(null, data.result.message);
+						if(data.error) cb(helper.eFmt('query() resp error', 400, data.error), null);
+						else if(data.result) cb(null, data.result.message);
 						else cb(null, data.OK);
 					}
 					else cb(helper.eFmt('query() resp error', 502, data), null);		//something is wrong, response is not what we expect
