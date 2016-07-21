@@ -180,7 +180,7 @@ Take a look at how this function works, especially how it uses the register() fu
 If this is not applicable for your network (ie you have a custom IBM Blockchain network) you can easily create your own version of `ibc.load()` for your needs. 
 It will run in order:
 
-1. ibc.network(options.network.peers, options.network.options) *check out other options in [ibc.network()](#ibcnetworkarraypeers-optionsk)*
+1. ibc.network(options.network.peers, options.network.options) *check out other options in [ibc.network()](#ibcnetwork)*
 1. ibc.register(...) 
 	- It will register the first peer with the first enrollId, the 2nd peer against the 2nd enrollId and so on.
 	- This function only runs if valid users are found in options.network.users. A valid user is one that contains 'type_1'.
@@ -190,7 +190,7 @@ It will run in order:
 
 Options
 - **maxRetry** = integer - number of times to retry this call before giving up.
-- [more] - same options as the function ibc.network(), [see network()](#ibcnetworkarraypeers-optionsk) for details 
+- [more] - same options as the function [ibc.network()](#ibcnetwork), click for details 
 
 Ex:
 
@@ -248,7 +248,7 @@ Ex:
 	ibc.load_chaincode(options, cb_ready);
 ```
 
-### ibc.network(arrayPeers, [options])
+### <a name="ibcnetwork"></a>ibc.network(arrayPeers, [options])
 Set the information about the peers in the network.
 This should be an array of peer objects. 
 The optional options parameter should be an object with the field `quiet` and/or `timeout`.
@@ -274,7 +274,7 @@ Note **only** the field names you see above  (`api_host`, `api_port`, `api_port_
 If you are using a Bluemix network you will see lots of other fields in the credentials JSON blob, but they are not needed. 
 Its also fine to include the extra fields.
 You can ommit the field `api_port_tls` if your network does not support tls. 
-Make sure the `options.tls` is `true`.
+Make sure the `options.tls` is `false`.
 
 ### ibc.save(path [callback])
 Save the [Chaincode Summary File](#ccsf) to a path.
