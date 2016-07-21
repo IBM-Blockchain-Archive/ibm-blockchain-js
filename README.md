@@ -188,8 +188,8 @@ It will run in order:
 1. ibc.load_chaincode(options.chaincode, [callback]) 
 1. callback(err, cc) 
 
-Options
-- **maxRetry** = integer - number of times to retry this call before giving up.
+Options: 
+- **maxRetry** = integer - number of times to retry `ibc.register()` before giving up
 - [more] - same options as the function [ibc.network()](#ibcnetwork), click for details 
 
 Ex:
@@ -251,7 +251,10 @@ Ex:
 ### <a name="ibcnetwork"></a>ibc.network(arrayPeers, [options])
 Set the information about the peers in the network.
 This should be an array of peer objects. 
-The optional options parameter should be an object with the field `quiet` and/or `timeout`.
+The options parameter is optional.
+Each field in `options` is also optional.
+
+Options: 
 - **quiet** = boolean - when true will print out only minimal HTTP debug information. Defaults `true`.
 - **timeout** = integer - time in ms to wait for a http response. Defaults `60000`.
 - **tls** = boolean - when `false` will use HTTP instead of HTTPS. Defaults `true`.
