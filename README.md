@@ -55,8 +55,8 @@ npm install ibm-blockchain-js
 		network:{
 			peers:   [{
 				"api_host": "xxx.xxx.xxx.xxx",
-				"api_port": "xxxxx",
-				"api_port_tls": "xxx",
+				"api_port": xxx,
+				"api_port_tls": xxx,
 				"id": "xxxxxx-xxxx-xxx-xxx-xxxxxxxxxxxx_vpx"
 			}],
 			users:  [{
@@ -199,8 +199,8 @@ Ex:
 		network:{
 			peers:   [{
 				"api_host": "xxx.xxx.xxx.xxx",
-				"api_port": "xxxxx",
-				"api_port_tls": "xxx",
+				"api_port": xxx,
+				"api_port_tls": xxx,
 				"id": "xxxxxx-xxxx-xxx-xxx-xxxxxxxxxxxx_vpx"
 			}],
 			users:  [{
@@ -262,8 +262,8 @@ Ex:
 	var peers = [
 		{
 			"api_host": "xxx.xxx.xxx.xxx",               //ip or hostname of api for this peer
-			"api_port": "xxxxx",                         //port for api, non tls
-			"api_port_tls": "xxx",                       //port for api with tls.
+			"api_port": xxx,                             //port for api, non tls (integer)
+			"api_port_tls": xxx,                         //port for api with tls. (integer)
 			"id": "xxxxxx-xxxx-xxx-xxx-xxxxxxxxxxxx_vpx" //unique id of peer (string)
 		}
 	]
@@ -533,7 +533,7 @@ I found it handy in niche cases, but it will probably be unhelpful to most devel
 		"peers": [{
 			"name": "vp1-xxx.xxx.xxx.xxx",
 			"api_host": "xxx.xxx.xxx.xxx",
-			"api_port": "xxx",
+			"api_port": xxx,
 			"id": "xxxxx_vp1",
 			"tls": false,
 			"enrollId": "user1"
