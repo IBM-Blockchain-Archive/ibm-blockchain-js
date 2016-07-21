@@ -180,13 +180,17 @@ Take a look at how this function works, especially how it uses the register() fu
 If this is not applicable for your network (ie you have a custom IBM Blockchain network) you can easily create your own version of `ibc.load()` for your needs. 
 It will run in order:
 
-1. ibc.network(options.network.peers, options.network.options) *check out other options in ibc.network()*
+1. ibc.network(options.network.peers, options.network.options) *check out other options in [ibc.network()](#ibcnetworkarraypeers-optionsk)*
 1. ibc.register(...) 
 	- It will register the first peer with the first enrollID, the 2nd peer against the 2nd enrollID and so on.
 	- This function only runs if valid users are found in options.network.users. A valid user is one that contains 'type_1'.
 	- Any errors in register will stop execution and run callback(err).
 1. ibc.load_chaincode(options.chaincode, [callback]) 
 1. callback(err, cc) 
+
+Options
+- **maxRetry** = integer - number of times to retry this call before giving up.
+- [more] - same options as the function ibc.network(), [see network()](#ibcnetworkarraypeers-optionsk) for details 
 
 Ex:
 
@@ -206,13 +210,14 @@ Ex:
 			options: {            //this is optional, gets passed to ibc.network(peers, options);
 				quiet: true, 
 				timeout: 60000,
-				tls: false
+				tls: true,
+				maxRetry: 3
 			}
 		},
 		chaincode:{
 			zip_url: 'https://github.com/ibm-blockchain/marbles-chaincode/archive/master.zip', //http/https of a link to download zip
-			unzip_dir: 'marbles-chaincode-master/part2_v1.0.0',                                        //name/path to folder that contains the chaincode you want to deploy (path relative to unzipped root)
-			git_url: 'https://github.com/ibm-blockchain/marbles-chaincode/part2_v1.0.0',             //git https URL. should point to the desired chaincode repo AND directory
+			unzip_dir: 'marbles-chaincode-master/part2_v1.0.0',                                //name/path to folder that contains the chaincode you want to deploy (path relative to unzipped root)
+			git_url: 'https://github.com/ibm-blockchain/marbles-chaincode/part2_v1.0.0',       //git https URL. should point to the desired chaincode repo AND directory
 			
 			deployed_name: null    //[optional] this is the hashed name of a deployed chaincode.  if you want to run with chaincode that is already deployed set it now, else it will be set when you deploy with the sdk
 		}
@@ -247,23 +252,29 @@ Ex:
 Set the information about the peers in the network.
 This should be an array of peer objects. 
 The optional options parameter should be an object with the field `quiet` and/or `timeout`.
-- quiet = boolean - when true will print out only minimal HTTP debug information. Defaults `true`.
-- timeout = integer - time in ms to wait for a http response. Defaults `60000`.
-- tls = boolean - when `false` will use HTTP instead of HTTPS. Defaults `true`.
+- **quiet** = boolean - when true will print out only minimal HTTP debug information. Defaults `true`.
+- **timeout** = integer - time in ms to wait for a http response. Defaults `60000`.
+- **tls** = boolean - when `false` will use HTTP instead of HTTPS. Defaults `true`.
 
 Ex:
 
 ```js
 	var peers = [
 		{
-			"api_host": "xxx.xxx.xxx.xxx",
-			"api_port": "xxxxx",
-			"api_port_tls": "xxx",
-			"id": "xxxxxx-xxxx-xxx-xxx-xxxxxxxxxxxx_vpx"
+			"api_host": "xxx.xxx.xxx.xxx",               //ip or hostname of api for this peer
+			"api_port": "xxxxx",                         //port for api, non tls
+			"api_port_tls": "xxx",                       //port for api with tls.
+			"id": "xxxxxx-xxxx-xxx-xxx-xxxxxxxxxxxx_vpx" //unique id of peer (string)
 		}
 	]
-	ibc.network(peers, {quiet: false, timeout: 120000});
+	ibc.network(peers, {quiet: false, timeout: 120000}); //can pass config options
 ```
+
+Note **only** the field names you see above  (`api_host`, `api_port`, `api_port_tls`, `id`) are required.
+If you are using a Bluemix network you will see lots of other fields in the credentials JSON blob, but they are not needed. 
+Its also fine to include the extra fields.
+You can ommit the field `api_port_tls` if your network does not support tls. 
+Make sure the `options.tls` is `true`.
 
 ### ibc.save(path [callback])
 Save the [Chaincode Summary File](#ccsf) to a path.
@@ -355,10 +366,10 @@ Ex:
 Only applicable on a network with security enabled. 
 `register()` will register against peer[peerIndex] with the provided credentials.
 If successful, the peer will now use this `enrollID` to perform any http requests.
-- peerIndex = integer - position of peer in peers array (the one you fed ibc.networks()) you want to register against.
-- enrollID = string - name of secure context user.
-- enrollSecret = string - password/secret/api key of secure context user.
-- maxRetry = integer - number of times to retry this call before giving up.
+- **peerIndex** = integer - position of peer in peers array (the one you fed ibc.networks()) you want to register against.
+- **enrollID** = string - name of secure context user.
+- **enrollSecret** = string - password/secret/api key of secure context user.
+- **maxRetry** = integer - number of times to retry this call before giving up.
 
 Ex:
 
@@ -406,8 +417,8 @@ The `enrollID` parameter should be the desired secure context enrollID that has 
 If left `null` the SDK will use a known enrollID for the selected peer. (this is only relevant in a permissioned network)
 
 Options: 
-- save_path = save the [Chaincode Summary File](#ccsf) to 'save_path'. 
-- delay_ms = time in milliseconds to postpone the callback after deploy. Default is `40000`
+- **save_path** = save the [Chaincode Summary File](#ccsf) to 'save_path'. 
+- **delay_ms** = time in milliseconds to postpone the callback after deploy. Default is `40000`
 
 Ex:
 
