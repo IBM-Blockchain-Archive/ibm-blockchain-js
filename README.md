@@ -1,8 +1,10 @@
 *Are you looking for the Marbles app demo?  That’s not here, head to the [marbles example](https://github.com/IBM-Blockchain/marbles)* 
 
 # ibm-blockchain-js
-This is a Node.js library for easier interaction IBM Blockchain chaincode. 
-All documentation is on this page.
+This is a Node.js library for REST based interaction with [Hyperledger](https://github.com/hyperledger/fabric) [chaincode](https://github.com/hyperledger/fabric/blob/master/docs/FAQ/chaincode_FAQ.md/). 
+All `ibm-blockchain-js` documentation is on this page.
+
+*7/22 Update! there is a new gRPC based SDK called [HFC](https://github.com/hyperledger/fabric/tree/master/sdk/node). I will continue to maintain this SDK for as long as REST exists.*
 
 Table Of Contents:
 
@@ -510,14 +512,14 @@ It is returned in the callback to load_chaincode() and contains all your cc func
 
 ```js
 	{
-		name: "input error",
-		code: 400,
-		details: {msg: "did not provide git_url"}
+		name: "input error",                       //short name of error
+		code: 400,                                 //http error status code, integer
+		details: {msg: "did not provide git_url"}  //description of error, obj of unknown makeup
 	};
 ```
 	
 ### <a name="ccsf"></a>Chaincode Summary File
-This file is used internally. 
+This file is used internally when debugging. 
 It is created in ibc.load_chaincode() and updated with chaincode.deploy(). 
 A copy can be saved elsewhere with ibc.save(path). 
 I found it handy in niche cases, but it will probably be unhelpful to most developers. 
