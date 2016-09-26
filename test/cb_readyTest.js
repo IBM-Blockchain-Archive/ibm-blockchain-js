@@ -27,7 +27,9 @@ var options = {
 	// For simplicity, I chose the first user on the list provided.
 	users: [{
 		"username": "user_type0_52737ec3c6",
-		"secret": "4841d68d27" 
+		"secret": "4841d68d27",
+		"enrollId":"user_type0_52737ec3c6",
+		"enrollSecret":"4841d68d27"		
 	}] }, 
 
 	// The chaincode version being tested here is the one deployed in Marbles2.
