@@ -740,39 +740,23 @@ function deploy(func, args, deploy_options, enrollId, cb){
 	logger.log('\n\n\t Waiting...');												//this can take awhile
 	
 	var options = {}, body = {};
-	if(ibc.chaincode.details.version.indexOf('hyperledger/fabric/core/chaincode/shim') >= 0){	//hyperledger body format
-		options = {path: '/chaincode'};
-		body = 	{
-					jsonrpc: '2.0',
-					method: 'deploy',
-					params: {
-						type: 1,
-						chaincodeID:{
-							path: ibc.chaincode.details.git_url
-						},
-						ctorMsg: {
-							function: func,
-							args: args
-						},
-						secureContext: enrollId
-					},
-					id: Date.now()
-				};
-	}
-	else{																						//obc-peer body format
-		options = {path: '/devops/deploy'};
-		body = 	{
-					type: 'GOLANG',
-					chaincodeID: {
-							path: ibc.chaincode.details.git_url
-						},
-					ctorMsg:{
-							'function': func,
-							'args': args
-					},
-					secureContext: enrollId
-				};
-	}
+	options = {path: '/chaincode'};
+	body = 	{
+		jsonrpc: '2.0',
+		method: 'deploy',
+		params: {
+			type: 1,
+			chaincodeID:{
+				path: ibc.chaincode.details.git_url
+			},
+			ctorMsg: {
+				function: func,
+				args: args
+			},
+			secureContext: enrollId
+		},
+		id: Date.now()
+	};
 
 	// ---- Success ---- //
 	options.success = function(statusCode, data){
@@ -906,42 +890,23 @@ function build_invoke_func(name){
 			}
 
 			var options = {}, body = {};
-			if(ibc.chaincode.details.version.indexOf('hyperledger/fabric/core/chaincode/shim') >= 0){
-				options = {path: '/chaincode'};
-				body = {
-							jsonrpc: '2.0',
-							method: 'invoke',
-							params: {
-								type: 1,
-								chaincodeID:{
-									name: ibc.chaincode.details.deployed_name
-								},
-								ctorMsg: {
-									function: name,
-									args: args
-								},
-								secureContext: enrollId
-							},
-							id: Date.now()
-						};
-			}
-			else{
-				options = {path: '/devops/invoke'};
-				body = {
-							chaincodeSpec: {
-								type: 'GOLANG',
-								chaincodeID: {
-									name: ibc.chaincode.details.deployed_name,
-								},
-								ctorMsg: {
-									function: name,
-									args: args
-								},
-								secureContext: enrollId
-							}
-						};
-			}
-			
+			options = {path: '/chaincode'};
+			body = {
+				jsonrpc: '2.0',
+				method: 'invoke',
+				params: {
+					type: 1,
+					chaincodeID:{
+						name: ibc.chaincode.details.deployed_name
+					},
+					ctorMsg: {
+						function: name,
+						args: args
+					},
+					secureContext: enrollId
+				},
+				id: Date.now()
+			};
 			options.success = function(statusCode, data){
 				logger.log('[ibc-js]', name, ' - success:', data);
 				ibc.q.push(Date.now());												//new action, add it to queue
@@ -977,41 +942,23 @@ function build_query_func(name){
 			
 			var options = {}, body = {};
 
-			if(ibc.chaincode.details.version.indexOf('hyperledger/fabric/core/chaincode/shim') >= 0){
-				options = {path: '/chaincode'};
-				body = {
-							jsonrpc: '2.0',
-							method: 'query',
-							params: {
-								type: 1,
-								chaincodeID:{
-									name: ibc.chaincode.details.deployed_name
-								},
-								ctorMsg: {
-									function: name,
-									args: args
-								},
-								secureContext: enrollId
-							},
-							id: Date.now()
-						};
-			}
-			else{
-				options = {path: '/devops/query'};
-				body = {
-							chaincodeSpec: {
-								type: 'GOLANG',
-								chaincodeID: {
-									name: ibc.chaincode.details.deployed_name,
-								},
-								ctorMsg: {
-									function: name,
-									args: args
-								},
-								secureContext: enrollId
-							}
-						};
-			}
+			options = {path: '/chaincode'};
+			body = {
+				jsonrpc: '2.0',
+				method: 'query',
+				params: {
+					type: 1,
+					chaincodeID:{
+						name: ibc.chaincode.details.deployed_name
+					},
+					ctorMsg: {
+						function: name,
+						args: args
+					},
+					secureContext: enrollId
+				},
+				id: Date.now()
+			};
 			
 			options.success = function(statusCode, data){
 				logger.log('[ibc-js]', name, ' - success:', data);
