@@ -97,9 +97,6 @@ ibc.prototype.load = function(options, cb){
 	ibc.prototype.network(options.network.peers, options.network.options);
 
 	// Step 2 - optional - only for secure networks
-	if(options.network.users){
-		options.network.users = helper.filter_users(options.network.users);			//only use the appropriate IDs filter out the rest
-	}
 	if(options.network.users && options.network.users.length > 0){
 		ibc.chaincode.details.users = options.network.users;
 		var arr = [];
