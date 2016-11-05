@@ -117,7 +117,7 @@ ibc.prototype.load = function(options, cb){
 	}
 	else{
 		ibc.chaincode.details.users = [];
-		logger.log('[ibc-js] No membership users found after filtering, assuming this is a network w/o membership');
+		logger.log('[ibc-js] No membership users found, assuming this is a network w/o membership');
 		load_cc();
 	}
 
