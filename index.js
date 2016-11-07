@@ -330,7 +330,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 			
 			if(i_start > 0 && i_stop > 0){
 				// Step 2c.
-				var regex = /function\s+==\s+["'](\w+)["']/g;							//find the exposed chaincode functions in "Invoke()""
+				var regex = /function\s+.=\s+["'](\w+)["']/g;							//find the exposed chaincode functions in "Invoke()""
 				var result2;
 				while ( (result2 = regex.exec(str)) ) {
 					cc_suspects.push({name: result2[1], index: result2.index});			//store this for future parsing like query & init
