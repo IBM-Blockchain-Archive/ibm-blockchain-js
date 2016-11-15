@@ -292,7 +292,7 @@ ibc.prototype.load_chaincode = function(options, cb) {
 		else{
 			logger.log('[ibc-js] Parsing file for shim version');
 			
-			var shim_regex = /github.com\/\S+\/shim/g;					//find chaincode's shim version
+			var shim_regex = /github.com\/\S+\/shim/g;									//find chaincode's shim version
 			var result = file.match(shim_regex);
 			if(result[0]){
 				logger.log('[ibc-js] Found shim version:', result[0]);
@@ -563,15 +563,16 @@ ibc.prototype.clear =  function(cb){
 ibc.prototype.chain_stats =  function(cb){
 	var options = {path: '/chain'};													//very simple API, get chainstats!
 
-	options.success = function(statusCode, data){
-		logger.log('[ibc-js] Chain Stats - success');
-		if(cb) cb(null, data);
-	};
-	options.failure = function(statusCode, e){
-		logger.error('[ibc-js] Chain Stats - failure:', statusCode, e);
-		if(cb) cb(helper.eFmt('chain_stats() error', statusCode, e), null);
-	};
-	rest.get(options, '');
+	rest.get(options, null, function(statusCode, data){
+		if(statusCode != null){
+			logger.error('[ibc-js] Chain Stats - failure:', statusCode, data);
+			if(cb) cb(helper.eFmt('chain_stats() error', statusCode, data), null);
+		}
+		else{
+			logger.log('[ibc-js] Chain Stats - success');
+			if(cb) cb(null, data);
+		}
+	});
 };
 
 //============================================================================================================================
@@ -579,15 +580,17 @@ ibc.prototype.chain_stats =  function(cb){
 //============================================================================================================================
 ibc.prototype.block_stats =  function(id, cb){
 	var options = {path: '/chain/blocks/' + id};									//i think block IDs start at 0, height starts at 1, fyi
-	options.success = function(statusCode, data){
-		logger.log('[ibc-js] Block Stats ', id , '- success');
-		if(cb) cb(null, data);
-	};
-	options.failure = function(statusCode, e){
-		logger.error('[ibc-js] Block Stats ', id , '- failure:', statusCode);
-		if(cb) cb(helper.eFmt('block_stats() error', statusCode, e), null);
-	};
-	rest.get(options, '');
+
+	rest.get(options, null, function(statusCode, data){
+		if(statusCode != null){
+			logger.error('[ibc-js] Block Stats ', id , '- failure:', statusCode);
+			if(cb) cb(helper.eFmt('block_stats() error', statusCode, data), null);
+		}
+		else{
+			logger.log('[ibc-js] Block Stats ', id , '- success');
+			if(cb) cb(null, data);
+		}
+	});
 };
 
 //============================================================================================================================
@@ -619,20 +622,21 @@ function read(args, enrollId, cb){
 				},
 				id: Date.now()
 	};
-	//logger.log('body', body);
-	options.success = function(statusCode, data){
-		logger.log('[ibc-js] (Read) - success:', data);
-		if(cb){
-			if(data.error) cb(helper.eFmt('query() resp error', 400, data.error), null);
-			else if(data.result) cb(null, data.result.message);
-			else cb(null, data.OK);
+
+	rest.post(options, null, body, function(statusCode, data){
+		if(statusCode != null){
+			logger.error('[ibc-js] (Read) - failure:', statusCode);
+			if(cb) cb(helper.eFmt('read() error', statusCode, data), null);
 		}
-	};
-	options.failure = function(statusCode, e){
-		logger.error('[ibc-js] (Read) - failure:', statusCode);
-		if(cb) cb(helper.eFmt('read() error', statusCode, e), null);
-	};
-	rest.post(options, '', body);
+		else{
+			logger.log('[ibc-js] (Read) - success:', data);
+			if(cb){
+				if(data.error) cb(helper.eFmt('query() resp error', 400, data.error), null);
+				else if(data.result) cb(null, data.result.message);
+				else cb(null, data.OK);
+			}
+		}
+	});
 }
 
 //============================================================================================================================
@@ -655,23 +659,23 @@ function register(index, enrollId, enrollSecret, maxRetry, attempt, cb){
 					enrollId: enrollId,
 					enrollSecret: enrollSecret
 				};
-
-	options.success = function(statusCode, data){
-		logger.log('[ibc-js] Registration success x' + attempt + ' :', enrollId);
-		ibc.chaincode.details.peers[index].enrollId = enrollId;							//remember a valid enrollId for this peer
-		if(cb) cb(null, data);
-	};
-	options.failure = function(statusCode, e){
-		logger.error('[ibc-js] Register - failure x' + attempt + ' :', enrollId, statusCode);
-		if(attempt <= maxRetry){														//lets try again after a short delay, maybe the peer is still starting
-			logger.log('[ibc-js] \tgoing to try to register again in 30 secs');
-			setTimeout(function(){register(index, enrollId, enrollSecret, maxRetry, ++attempt, cb);}, 30000);
+	rest.post(options, null, body, function(statusCode, data){
+		if(statusCode != null){
+			logger.error('[ibc-js] Register - failure x' + attempt + ' :', enrollId, statusCode);
+			if(attempt <= maxRetry){													//lets try again after a short delay, maybe the peer is still starting
+				logger.log('[ibc-js] \tgoing to try to register again in 30 secs');
+				setTimeout(function(){register(index, enrollId, enrollSecret, maxRetry, ++attempt, cb);}, 30000);
+			}
+			else{
+				if(cb) cb(helper.eFmt('register() error', statusCode, data), null);		//give up
+			}
 		}
-		else{
-			if(cb) cb(helper.eFmt('register() error', statusCode, e), null);			//give up
+		else {
+			logger.log('[ibc-js] Registration success x' + attempt + ' :', enrollId);
+			ibc.chaincode.details.peers[index].enrollId = enrollId;						//remember a valid enrollId for this peer
+			if(cb) cb(null, data);
 		}
-	};
-	rest.post(options, '', body);
+	});
 }
 
 //============================================================================================================================
@@ -686,16 +690,17 @@ ibc.prototype.unregister = function(index, enrollId, cb) {
 		ssl: ibc.chaincode.details.peers[index].tls
 	};
 
-	options.success = function(statusCode, data){
-		logger.log('[ibc-js] Unregistering success:', enrollId);
-		ibc.chaincode.details.peers[index].enrollId = null;								//unremember a valid enrollId for this peer
-		if(cb) cb(null, data);
-	};
-	options.failure = function(statusCode, e){
-		logger.log('[ibc-js] Unregistering - failure:', enrollId, statusCode);
-		if(cb) cb(helper.eFmt('unregister() error', statusCode, e), null);
-	};
-	rest.delete(options, '');
+	rest.delete(options, null, null, function(statusCode, data){
+		if(statusCode != null){
+			logger.log('[ibc-js] Unregistering - failure:', enrollId, statusCode);
+			if(cb) cb(helper.eFmt('unregister() error', statusCode, data), null);
+		}
+		else {
+			logger.log('[ibc-js] Unregistering success:', enrollId);
+			ibc.chaincode.details.peers[index].enrollId = null;								//unremember a valid enrollId for this peer
+			if(cb) cb(null, data);
+		}
+	});
 };
 
 //============================================================================================================================
@@ -710,15 +715,16 @@ ibc.prototype.check_register = function(index, enrollId, cb) {
 		ssl: ibc.chaincode.details.peers[index].tls
 	};
 
-	options.success = function(statusCode, data){
-		logger.log('[ibc-js] Check Register success:', enrollId);
-		if(cb) cb(null, data);
-	};
-	options.failure = function(statusCode, e){
-		logger.error('[ibc-js] Check Register - failure:', enrollId, statusCode);
-		if(cb) cb(helper.eFmt('check_register() error', statusCode, e), null);
-	};
-	rest.get(options, '');
+	rest.get(options, null, function(statusCode, data){
+		if(statusCode != null){
+			logger.error('[ibc-js] Check Register - failure:', enrollId, statusCode);
+			if(cb) cb(helper.eFmt('check_register() error', statusCode, data), null);
+		}
+		else{
+			logger.log('[ibc-js] Check Register success:', enrollId);
+			if(cb) cb(null, data);
+		}
+	});
 };
 
 //============================================================================================================================
@@ -756,47 +762,48 @@ function deploy(func, args, deploy_options, enrollId, cb){
 		id: Date.now()
 	};
 
-	// ---- Success ---- //
-	options.success = function(statusCode, data){
-		if(data.result && ibc.chaincode.details.version.indexOf('hyperledger/fabric/core/chaincode/shim') >= 0){//hyperledger response
-			ibc.chaincode.details.deployed_name = data.result.message;
-		}
-		else ibc.chaincode.details.deployed_name = data.message;												//obc-peer response
-		
-		if(!ibc.chaincode.details.deployed_name || ibc.chaincode.details.deployed_name.length < 32){
-			ibc.chaincode.details.deployed_name = '';								//doesnt look right, let code below catch error
+	rest.post(options, null, body, function(statusCode, data){
+		// ---- Failure ---- ///
+		if(statusCode != null){
+			logger.error('[ibc-js] deploy - failure:', statusCode);
+			if(cb) cb(helper.eFmt('deploy() error', statusCode, data), null);
 		}
 
-		if(ibc.chaincode.details.deployed_name === ''){
-			logger.error('\n\n\t deploy resp error - there is no chaincode hash name in response:', data);
-			if(cb) cb(helper.eFmt('deploy() error no cc name', 502, data), null);
-		}
+		// ---- Success ---- //
 		else{
-			ibc.prototype.save(tempDirectory);										//save it to known place so we remember the cc name
-			if(deploy_options && deploy_options.save_path != null) {				//save it to custom route
-				ibc.prototype.save(deploy_options.save_path);
+			if(data.result && ibc.chaincode.details.version.indexOf('hyperledger/fabric/core/chaincode/shim') >= 0){//hyperledger response
+				ibc.chaincode.details.deployed_name = data.result.message;
 			}
+			else ibc.chaincode.details.deployed_name = data.message;					//obc-peer response
 			
-			if(cb){
-				var wait_ms = 45000;												//default wait after deploy, peer may still be starting
-				if(deploy_options && deploy_options.delay_ms && Number(deploy_options.delay_ms)) wait_ms = deploy_options.delay_ms;
-				logger.log('\n\n\t deploy success [waiting another', (wait_ms / 1000) ,'seconds]');
-				logger.log('\t', ibc.chaincode.details.deployed_name, '\n');
+			if(!ibc.chaincode.details.deployed_name || ibc.chaincode.details.deployed_name.length < 32){
+				ibc.chaincode.details.deployed_name = '';								//doesnt look right, let code below catch error
+			}
+
+			if(ibc.chaincode.details.deployed_name === ''){
+				logger.error('\n\n\t deploy resp error - there is no chaincode hash name in response:', data);
+				if(cb) cb(helper.eFmt('deploy() error no cc name', 502, data), null);
+			}
+			else{
+				ibc.prototype.save(tempDirectory);										//save it to known place so we remember the cc name
+				if(deploy_options && deploy_options.save_path != null) {				//save it to custom route
+					ibc.prototype.save(deploy_options.save_path);
+				}
 				
-				setTimeout(function(){
-					logger.log('[ibc-js] Deploy Chaincode - Complete');
-					cb(null, data);
-				}, wait_ms);														//wait extra long, not always ready yet
+				if(cb){
+					var wait_ms = 45000;												//default wait after deploy, peer may still be starting
+					if(deploy_options && deploy_options.delay_ms && Number(deploy_options.delay_ms)) wait_ms = deploy_options.delay_ms;
+					logger.log('\n\n\t deploy success [waiting another', (wait_ms / 1000) ,'seconds]');
+					logger.log('\t', ibc.chaincode.details.deployed_name, '\n');
+					
+					setTimeout(function(){
+						logger.log('[ibc-js] Deploy Chaincode - Complete');
+						cb(null, data);
+					}, wait_ms);														//wait extra long, not always ready yet
+				}
 			}
 		}
-	};
-	
-	// ---- Failure ---- ///
-	options.failure = function(statusCode, e){
-		logger.error('[ibc-js] deploy - failure:', statusCode);
-		if(cb) cb(helper.eFmt('deploy() error', statusCode, e), null);
-	};
-	rest.post(options, '', body);
+	});
 }
 
 //============================================================================================================================
@@ -855,15 +862,16 @@ ibc.prototype.get_transaction = function(udid, cb) {
 		path: '/transactions/' + udid
 	};
 
-	options.success = function(statusCode, data){
-		logger.log('[ibc-js] Get Transaction - success:', data);
-		if(cb) cb(null, data);
-	};
-	options.failure = function(statusCode, e){
-		logger.error('[ibc-js] Get Transaction - failure:', statusCode);
-		if(cb) cb(helper.eFmt('read() error', statusCode, e), null);
-	};
-	rest.get(options, '');
+	rest.get(options, null, function(statusCode, data){
+		if(statusCode != null){
+			logger.error('[ibc-js] Get Transaction - failure:', statusCode);
+			if(cb) cb(helper.eFmt('read() error', statusCode, data), null);
+		}
+		else{
+			logger.log('[ibc-js] Get Transaction - success:', data);
+			if(cb) cb(null, data);
+		}
+	});
 };
 
 //============================================================================================================================
@@ -905,16 +913,17 @@ function build_invoke_func(name){
 				},
 				id: Date.now()
 			};
-			options.success = function(statusCode, data){
-				logger.log('[ibc-js]', name, ' - success:', data);
-				ibc.q.push(Date.now());												//new action, add it to queue
-				if(cb) cb(null, data);
-			};
-			options.failure = function(statusCode, e){
-				logger.error('[ibc-js]', name, ' - failure:', statusCode, e);
-				if(cb) cb(helper.eFmt('invoke() error', statusCode, e), null);
-			};
-			rest.post(options, '', body);
+			rest.post(options, null, body, function(statusCode, data){
+				if(statusCode != null){
+					logger.error('[ibc-js]', name, ' - failure:', statusCode, data);
+					if(cb) cb(helper.eFmt('invoke() error', statusCode, data), null);
+				}
+				else{
+					logger.log('[ibc-js]', name, ' - success:', data);
+					ibc.q.push(Date.now());												//new action, add it to queue
+					if(cb) cb(null, data);
+				}
+			});
 		};
 	}
 }
@@ -958,22 +967,23 @@ function build_query_func(name){
 				id: Date.now()
 			};
 			
-			options.success = function(statusCode, data){
-				logger.log('[ibc-js]', name, ' - success:', data);
-				if(cb){
-					if(data){
-						if(data.error) cb(helper.eFmt('query() resp error', 400, data.error), null);
-						else if(data.result) cb(null, data.result.message);
-						else cb(null, data.OK);
-					}
-					else cb(helper.eFmt('query() resp error', 502, data), null);		//something is wrong, response is not what we expect
+			rest.post(options, null, body, function(statusCode, data){
+				if(statusCode != null){
+					logger.error('[ibc-js]', name, ' - failure:', statusCode, data);
+					if(cb) cb(helper.eFmt('query() error', statusCode, data), null);
 				}
-			};
-			options.failure = function(statusCode, e){
-				logger.error('[ibc-js]', name, ' - failure:', statusCode, e);
-				if(cb) cb(helper.eFmt('query() error', statusCode, e), null);
-			};
-			rest.post(options, '', body);
+				else{
+					logger.log('[ibc-js]', name, ' - success:', data);
+					if(cb){
+						if(data){
+							if(data.error) cb(helper.eFmt('query() resp error', 400, data.error), null);
+							else if(data.result) cb(null, data.result.message);
+							else cb(null, data.OK);
+						}
+						else cb(helper.eFmt('query() resp error', 502, data), null);		//something is wrong, response is not what we expect
+					}
+				}
+			});
 		};
 	}
 }
