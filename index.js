@@ -602,22 +602,23 @@ function read(args, enrollId, cb){
 		enrollId = ibc.chaincode.details.peers[ibc.selectedPeer].enrollId;
 	}
 
-	var options = {
-		path: '/devops/query'
-	};
+	var options = {path: '/chaincode'};
 	var body = {
-					chaincodeSpec: {
-						type: 'GOLANG',
-						chaincodeID: {
-							name: ibc.chaincode.details.deployed_name,
-						},
-						ctorMsg: {
-							function: 'query',
-							args: args
-						},
-						secureContext: enrollId
-					}
-				};
+				jsonrpc: '2.0',
+				method: 'query',
+				params: {
+					type: 1,
+					chaincodeID:{
+						name: ibc.chaincode.details.deployed_name
+					},
+					ctorMsg: {
+						function: 'query',
+						args: args
+					},
+					secureContext: enrollId
+				},
+				id: Date.now()
+	};
 	//logger.log('body', body);
 	options.success = function(statusCode, data){
 		logger.log('[ibc-js] (Read) - success:', data);
