@@ -8,6 +8,8 @@ All `ibm-blockchain-js` documentation is on this page.
 
 *12/15/2016 Update! Hyperledger Fabric v0.7+ no longer has REST apis. Therefore you should use the HFC module instead of this one.*
 
+**4/28/2017 Update! There will only be bare minimum support for this SDK.** *For Hyperledger Fabric v1.0 it has been replaced by [Fabric Client](https://www.npmjs.com/package/fabric-client). For Hyperledger Fabric v0.6 it has been replaced by [HFC](https://www.npmjs.com/package/hfc)*
+
 Table Of Contents:
 
 1. [v1.0.0 Migration!](#migrate)
