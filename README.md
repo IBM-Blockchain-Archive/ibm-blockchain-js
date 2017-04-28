@@ -1,4 +1,4 @@
-# ibm-blockchain-js
+# ibm-blockchain-js - [Deprecated]
 This is a Node.js library for REST based interaction with [Hyperledger](https://github.com/hyperledger/fabric) chaincode. 
 All `ibm-blockchain-js` documentation is on this page.
 
