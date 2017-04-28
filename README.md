@@ -1,5 +1,3 @@
-*Are you looking for the Marbles app demo?  That’s not here, head to the [marbles example](https://github.com/IBM-Blockchain/marbles)* 
-
 # ibm-blockchain-js
 This is a Node.js library for REST based interaction with [Hyperledger](https://github.com/hyperledger/fabric) [chaincode](https://github.com/hyperledger/fabric/blob/master/docs/FAQ/chaincode_FAQ.md/). 
 All `ibm-blockchain-js` documentation is on this page.
@@ -477,7 +475,7 @@ If left `null` the SDK will use a known enrollId for the selected peer. (this is
 ***
 ***
 
-##<a name="formats"></a>Formats
+## <a name="formats"></a>Formats
 ### Chaincode Object
 This is the main guy.
 It is returned in the callback to load_chaincode() and contains all your cc functions + some of the setup/input data.
@@ -559,7 +557,7 @@ I found it handy in niche cases, but it will probably be unhelpful to most devel
 	}
 ```
 
-#FAQ
+# FAQ
 
 *Do you have any examples that use this?*
 
